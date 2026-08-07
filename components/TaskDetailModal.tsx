@@ -1,0 +1,129 @@
+'use client'
+
+import { useState } from 'react'
+import { X, Wand2, Calendar, Save, Trash2, CheckSquare, Square } from 'lucide-react'
+
+export default function TaskDetailModal({ 
+  taskTitle, 
+  onClose 
+}: { 
+  taskTitle: string, 
+  onClose: () => void 
+}) {
+  const [loadingAI, setLoadingAI] = useState(false)
+  const [subtasks, setSubtasks] = useState([
+    { id: '1', title: 'Riset referensi visual sejenis', done: true },
+    { id: '2', title: 'Tentukan pilar konten mingguan', done: false },
+    { id: '3', title: 'Buat brief desain untuk tim eksekusi', done: false }
+  ])
+  const [showAIResult, setShowAIResult] = useState(false)
+
+  const handleAIBreaker = async () => {
+    setLoadingAI(true)
+    // TODO: Call /api/ai/break-task
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    setShowAIResult(true)
+    setLoadingAI(false)
+  }
+
+  const toggleSubtask = (id: string) => {
+    setSubtasks(subtasks.map(s => s.id === id ? { ...s, done: !s.done } : s))
+  }
+
+  const progress = Math.round((subtasks.filter(s => s.done).length / subtasks.length) * 100) || 0
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+        
+        {/* Header */}
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Organisasi &gt; BEM
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 flex-1 overflow-y-auto">
+          <textarea 
+            className="w-full text-2xl font-heading font-extrabold text-slate-800 border-none focus:ring-0 resize-none mb-4"
+            defaultValue={taskTitle}
+            rows={2}
+          />
+          
+          <div className="flex items-center gap-6 mb-8 text-sm">
+            <div className="flex items-center gap-2 text-slate-500">
+              <Calendar size={16} />
+              <span className="font-medium">Due: Besok, 23:59</span>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {!showAIResult ? (
+              <div className="bg-gradient-to-br from-[#FBBF24]/10 to-[#FF9F43]/10 border border-[#FBBF24]/30 rounded-2xl p-6 text-center">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-[#FF9F43]">
+                  <Wand2 size={32} className={loadingAI ? 'animate-bounce' : ''} />
+                </div>
+                <h3 className="font-heading font-bold text-lg text-amber-900 mb-2">Tugas terlalu besar?</h3>
+                <p className="text-amber-700/80 text-sm mb-6 max-w-sm mx-auto">
+                  Biarkan AI memecah tugas ini menjadi langkah-langkah kecil yang siap dieksekusi agar kamu tidak kewalahan.
+                </p>
+                <button 
+                  onClick={handleAIBreaker}
+                  disabled={loadingAI}
+                  className="bg-[#FF9F43] hover:bg-[#ff8f24] text-white px-6 py-3 rounded-full font-bold shadow-md transition-all active:scale-95 disabled:opacity-70 flex items-center gap-2 mx-auto"
+                >
+                  <Wand2 size={18} />
+                  {loadingAI ? 'Memproses...' : '✨ Pecah Tugas dengan AI'}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-heading font-bold text-slate-800">Langkah-langkah (Sub-tugas)</h3>
+                  <span className="text-sm font-bold text-[#10B981]">{progress}%</span>
+                </div>
+                
+                <div className="w-full bg-slate-100 rounded-full h-2 mb-6">
+                  <div className="bg-[#10B981] h-2 rounded-full transition-all" style={{ width: `${progress}%` }}></div>
+                </div>
+
+                <div className="space-y-2">
+                  {subtasks.map((subtask) => (
+                    <div 
+                      key={subtask.id}
+                      onClick={() => toggleSubtask(subtask.id)}
+                      className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all border ${
+                        subtask.done ? 'bg-[#10B981]/5 border-[#10B981]/20' : 'bg-white border-slate-200 hover:border-[#10B981]'
+                      }`}
+                    >
+                      <button className={`mt-0.5 ${subtask.done ? 'text-[#10B981]' : 'text-slate-300'}`}>
+                        {subtask.done ? <CheckSquare size={20} /> : <Square size={20} />}
+                      </button>
+                      <p className={`text-sm font-medium ${subtask.done ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                        {subtask.title}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50">
+          <button className="text-slate-400 hover:text-red-500 flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-bold">
+            <Trash2 size={16} /> Hapus
+          </button>
+          <button onClick={onClose} className="bg-slate-800 hover:bg-slate-700 text-white flex items-center gap-2 px-6 py-2 rounded-full transition-colors text-sm font-bold shadow-md">
+            <Save size={16} /> Simpan Perubahan
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
