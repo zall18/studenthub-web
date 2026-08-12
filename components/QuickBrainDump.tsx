@@ -3,21 +3,40 @@
 import { useState } from 'react'
 import { Sparkles, Send } from 'lucide-react'
 
+import { useRouter } from 'next/navigation'
+
 export default function QuickBrainDump() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
 
     setLoading(true)
-    // TODO: Connect to /api/ai/categorize endpoint
-    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    setInput('')
-    setLoading(false)
-    alert('Tugas berhasil ditambahkan via Brain Dump!')
+    try {
+      const res = await fetch('/api/ai/categorize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input })
+      })
+      
+      const data = await res.json()
+      
+      if (data.success) {
+        setInput('')
+        alert(`Sukses! Tugas dikategorikan ke pilar: ${data.data.type}`)
+        router.refresh()
+      } else {
+        alert('Gagal memproses tugas: ' + data.error)
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan koneksi.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -35,6 +54,7 @@ export default function QuickBrainDump() {
       />
       <button
         type="submit"
+        suppressHydrationWarning
         disabled={loading || !input.trim()}
         className="bg-[#FF9F43] hover:bg-[#ff8f24] text-white p-2 rounded-full disabled:opacity-50 transition-colors"
       >

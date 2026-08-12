@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Input is required' }, { status: 400 })
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' })
     const prompt = `
       Anda adalah asisten AI produktivitas.
       Tugas Anda adalah mengkategorikan input dari pengguna ke dalam salah satu dari 3 pilar: 'MATKUL', 'ORGANISASI', atau 'PROYEK'.
@@ -40,12 +40,53 @@ export async function POST(req: Request) {
     const cleanedText = responseText.replace(/```json\n?|\n?```/g, '').trim()
     const parsedData = JSON.parse(cleanedText)
 
-    // TODO: Insert into Supabase 'tasks' table using the appropriate pillar_id
-    // Note: In a real app, we would look up the pillar_id based on user_id and parsedData.type
+    // 1. Get or create a pillar for this type
+    let pillarId = null
+    const { data: existingPillars } = await supabase
+      .from('pillars')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('type', parsedData.type)
+      .limit(1)
+
+    if (existingPillars && existingPillars.length > 0) {
+      pillarId = existingPillars[0].id
+    } else {
+      // Create a default pillar if none exists for this type
+      const { data: newPillar, error: pillarError } = await supabase
+        .from('pillars')
+        .insert({
+          user_id: user.id,
+          name: `Pilar ${parsedData.type}`,
+          type: parsedData.type
+        })
+        .select()
+        .single()
+        
+      if (newPillar) pillarId = newPillar.id
+    }
+
+    // 2. Insert the task
+    const { data: newTask, error: taskError } = await supabase
+      .from('tasks')
+      .insert({
+        user_id: user.id,
+        pillar_id: pillarId,
+        title: parsedData.title,
+        status: 'TO_DO',
+        is_ai_generated: true
+      })
+      .select()
+      .single()
+
+    if (taskError) throw taskError
 
     return NextResponse.json({
       success: true,
-      data: parsedData
+      data: {
+        ...parsedData,
+        task: newTask
+      }
     })
   } catch (error) {
     console.error('Error in AI categorizer:', error)

@@ -1,17 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 import KanbanBoard from '@/components/KanbanBoard'
-import { Users } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 
-export default async function OrganisasiPage() {
+export default async function MatkulPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Get pillars for ORGANISASI
+  // Get pillars for MATKUL
   const { data: pillars } = await supabase
     .from('pillars')
     .select('*')
     .eq('user_id', user?.id)
-    .eq('type', 'ORGANISASI')
+    .eq('type', 'MATKUL')
 
   const pillarIds = pillars?.map(p => p.id) || []
 
@@ -26,8 +26,8 @@ export default async function OrganisasiPage() {
     <KanbanBoard 
       initialTasks={tasks || []} 
       pillars={pillars || []} 
-      title="Organisasi"
-      iconNode={<Users size={32} className="text-[#FF9F43]" />}
+      title="Mata Kuliah"
+      iconNode={<BookOpen size={32} className="text-blue-500" />}
     />
   )
 }

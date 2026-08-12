@@ -22,7 +22,7 @@ export default function LoginButton() {
     <button
       onClick={handleLogin}
       disabled={loading}
-      className="flex items-center gap-2 bg-[#FF9F43] hover:bg-[#ff8f24] text-white px-6 py-3 rounded-full font-bold text-lg transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+      className="flex items-center gap-2 bg-[#FF9F43] hover:bg-[#ff8f24] text-white px-4 py-2 md:px-5 md:py-2.5 rounded-full font-bold text-sm md:text-base transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
     >
       <LogIn size={20} />
       {loading ? 'Menghubungkan...' : 'Mulai dengan Google'}
