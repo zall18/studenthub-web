@@ -50,6 +50,7 @@ export async function POST(req: Request) {
       .limit(1)
 
     if (existingPillars && existingPillars.length > 0) {
+      // @ts-ignore
       pillarId = existingPillars[0].id
     } else {
       // Create a default pillar if none exists for this type
