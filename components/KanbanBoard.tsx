@@ -55,7 +55,7 @@ export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: 
     // Update in Supabase
     const { error } = await supabase
       .from('tasks')
-      .update({ status: newStatus })
+      .update({ status: newStatus } as any)
       .eq('id', taskId)
 
     if (error) {

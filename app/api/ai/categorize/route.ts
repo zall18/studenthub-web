@@ -59,11 +59,11 @@ export async function POST(req: Request) {
           user_id: user.id,
           name: `Pilar ${parsedData.type}`,
           type: parsedData.type
-        })
+        } as any)
         .select()
         .single()
         
-      if (newPillar) pillarId = newPillar.id
+      if (newPillar) pillarId = (newPillar as any).id
     }
 
     // 2. Insert the task
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
         title: parsedData.title,
         status: 'TO_DO',
         is_ai_generated: true
-      })
+      } as any)
       .select()
       .single()
 

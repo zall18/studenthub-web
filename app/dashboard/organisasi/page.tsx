@@ -10,10 +10,10 @@ export default async function OrganisasiPage() {
   const { data: pillars } = await supabase
     .from('pillars')
     .select('*')
-    .eq('user_id', user?.id)
+    .eq('user_id', user?.id || '')
     .eq('type', 'ORGANISASI')
 
-  const pillarIds = pillars?.map(p => p.id) || []
+  const pillarIds = (pillars as any[])?.map(p => p.id) || []
 
   // Get tasks for those pillars
   const { data: tasks } = await supabase

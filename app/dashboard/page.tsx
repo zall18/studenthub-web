@@ -15,9 +15,9 @@ export default async function DashboardPage() {
   const { data: pillars } = await supabase
     .from('pillars')
     .select('id, name, type')
-    .eq('user_id', user?.id)
+    .eq('user_id', user?.id || '')
 
-  const pillarIds = pillars?.map(p => p.id) || []
+  const pillarIds = (pillars as any[])?.map(p => p.id) || []
 
   // Get tasks that are due today or urgent
   // If no pillars yet, this will be empty
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
           
           <div className="space-y-4 flex-1">
             {events && events.length > 0 ? (
-              events.map(event => {
+              (events as any[]).map(event => {
                 const colors = getPillarColor(event.pillars?.type || '')
                 return (
                   <div key={event.id} className="flex gap-4">
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
 
           <div className="space-y-3 flex-1">
             {tasks && tasks.length > 0 ? (
-              tasks.map(task => (
+              (tasks as any[]).map(task => (
                 <label key={task.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors border border-transparent hover:border-slate-100">
                   <input type="checkbox" className="mt-1 w-5 h-5 rounded border-slate-300 text-[#10B981] focus:ring-[#10B981]" />
                   <div>
