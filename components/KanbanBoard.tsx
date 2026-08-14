@@ -26,12 +26,12 @@ interface KanbanBoardProps {
 export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<string | null>(null)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   
   const supabase = createClient()
 
-  const handleOpenTask = (taskTitle: string) => {
-    setSelectedTask(taskTitle)
+  const handleOpenTask = (task: Task) => {
+    setSelectedTask(task)
     setIsModalOpen(true)
   }
 
@@ -116,7 +116,7 @@ export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: 
                 key={task.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, task.id)}
-                onClick={() => handleOpenTask(task.title)}
+                onClick={() => handleOpenTask(task)}
                 className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 cursor-grab hover:border-[#FF9F43] transition-colors group active:cursor-grabbing"
               >
                 <div className="flex items-start justify-between mb-2">
@@ -164,7 +164,7 @@ export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: 
                 draggable
                 onDragStart={(e) => handleDragStart(e, task.id)}
                 className="bg-white p-4 rounded-2xl shadow-sm border border-[#FBBF24] cursor-grab group active:cursor-grabbing" 
-                onClick={() => handleOpenTask(task.title)}
+                onClick={() => handleOpenTask(task)}
               >
                 <div className="flex justify-between items-start mb-2">
                    <p className="font-medium text-slate-800 text-sm leading-relaxed mb-4">
@@ -200,6 +200,7 @@ export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: 
                 key={task.id} 
                 draggable
                 onDragStart={(e) => handleDragStart(e, task.id)}
+                onClick={() => handleOpenTask(task)}
                 className="bg-white p-4 rounded-2xl shadow-sm border border-[#10B981] opacity-80 hover:opacity-100 transition-opacity flex items-start gap-3 cursor-grab active:cursor-grabbing group"
               >
                 <div className="mt-0.5 text-[#10B981]">
@@ -223,10 +224,13 @@ export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: 
         </div>
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && selectedTask && (
         <TaskDetailModal 
-          taskTitle={selectedTask || ''} 
-          onClose={() => setIsModalOpen(false)} 
+          task={selectedTask} 
+          onClose={() => {
+            setIsModalOpen(false)
+            window.location.reload()
+          }} 
         />
       )}
     </div>

@@ -1,22 +1,30 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Wand2, Calendar, Save, Trash2, CheckSquare, Square } from 'lucide-react'
+import { X, Wand2, Calendar, Save, Trash2, CheckSquare, Square, Tag, AlignLeft } from 'lucide-react'
+import { format } from 'date-fns'
+import { id } from 'date-fns/locale'
 
 export default function TaskDetailModal({ 
-  taskTitle, 
+  task, 
   onClose 
 }: { 
-  taskTitle: string, 
+  task: any, 
   onClose: () => void 
 }) {
   const [loadingAI, setLoadingAI] = useState(false)
   const [subtasks, setSubtasks] = useState([
-    { id: '1', title: 'Riset referensi visual sejenis', done: true },
-    { id: '2', title: 'Tentukan pilar konten mingguan', done: false },
-    { id: '3', title: 'Buat brief desain untuk tim eksekusi', done: false }
+    { id: '1', title: 'Pahami materi yang ada', done: true },
+    { id: '2', title: 'Buat draft penyelesaian', done: false },
+    { id: '3', title: 'Review dan kumpulkan', done: false }
   ])
   const [showAIResult, setShowAIResult] = useState(false)
+  
+  // State for editable fields
+  const [title, setTitle] = useState(task.title || '')
+  const [description, setDescription] = useState(task.description || '')
+  const [category, setCategory] = useState(task.category || '')
+  const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.substring(0, 16) : '')
 
   const handleAIBreaker = async () => {
     setLoadingAI(true)
@@ -26,8 +34,8 @@ export default function TaskDetailModal({
     setLoadingAI(false)
   }
 
-  const toggleSubtask = (id: string) => {
-    setSubtasks(subtasks.map(s => s.id === id ? { ...s, done: !s.done } : s))
+  const toggleSubtask = (subtaskId: string) => {
+    setSubtasks(subtasks.map(s => s.id === subtaskId ? { ...s, done: !s.done } : s))
   }
 
   const progress = Math.round((subtasks.filter(s => s.done).length / subtasks.length) * 100) || 0
@@ -39,7 +47,7 @@ export default function TaskDetailModal({
         {/* Header */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
           <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            Organisasi &gt; BEM
+            {task.pillars?.name ? `Matkul > ${task.pillars.name}` : 'Umum'}
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors">
             <X size={20} />
@@ -49,16 +57,47 @@ export default function TaskDetailModal({
         {/* Body */}
         <div className="p-6 flex-1 overflow-y-auto">
           <textarea 
-            className="w-full text-2xl font-heading font-extrabold text-slate-800 border-none focus:ring-0 resize-none mb-4"
-            defaultValue={taskTitle}
+            className="w-full text-2xl font-heading font-extrabold text-slate-800 border-none focus:ring-0 resize-none mb-4 outline-none"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             rows={2}
+            placeholder="Judul Tugas"
           />
           
-          <div className="flex items-center gap-6 mb-8 text-sm">
+          <div className="flex flex-wrap items-center gap-6 mb-8 text-sm">
             <div className="flex items-center gap-2 text-slate-500">
               <Calendar size={16} />
-              <span className="font-medium">Due: Besok, 23:59</span>
+              <input 
+                type="datetime-local" 
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="font-medium text-slate-600 bg-transparent border-none outline-none focus:ring-0"
+              />
             </div>
+            
+            <div className="flex items-center gap-2 text-slate-500">
+              <Tag size={16} />
+              <input 
+                type="text" 
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="Kategori (Misal: Kuis, Tugas Besar)"
+                className="font-medium text-slate-600 bg-transparent border-none outline-none focus:ring-0 w-48"
+              />
+            </div>
+          </div>
+          
+          <div className="mb-8">
+            <div className="flex items-center gap-2 text-slate-700 font-bold mb-2">
+              <AlignLeft size={18} />
+              <h3>Deskripsi</h3>
+            </div>
+            <textarea
+              className="w-full text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-4 min-h-[100px] outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-y"
+              placeholder="Tambahkan detail deskripsi tugas..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
 
           <div className="space-y-6">
@@ -119,7 +158,27 @@ export default function TaskDetailModal({
           <button className="text-slate-400 hover:text-red-500 flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-bold">
             <Trash2 size={16} /> Hapus
           </button>
-          <button onClick={onClose} className="bg-slate-800 hover:bg-slate-700 text-white flex items-center gap-2 px-6 py-2 rounded-full transition-colors text-sm font-bold shadow-md">
+          <button 
+            onClick={async () => {
+              // TODO: add real save logic, we need supabase instance here
+              // For now, we assume it's passed or just onClose
+              if (task.id) {
+                const { createClient } = await import('@/lib/supabase/client')
+                const supabase = createClient()
+                
+                const updatePayload = {
+                  title,
+                  description,
+                  category,
+                  due_date: dueDate ? new Date(dueDate).toISOString() : null
+                }
+                
+                await (supabase.from('tasks') as any).update(updatePayload).eq('id', task.id)
+              }
+              onClose()
+            }} 
+            className="bg-slate-800 hover:bg-slate-700 text-white flex items-center gap-2 px-6 py-2 rounded-full transition-colors text-sm font-bold shadow-md"
+          >
             <Save size={16} /> Simpan Perubahan
           </button>
         </div>
@@ -127,3 +186,4 @@ export default function TaskDetailModal({
     </div>
   )
 }
+

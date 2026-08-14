@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import KanbanBoard from '@/components/KanbanBoard'
+import MatkulList from '@/components/matkul/MatkulList'
 import { BookOpen } from 'lucide-react'
 
 export default async function MatkulPage() {
@@ -23,11 +24,17 @@ export default async function MatkulPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <KanbanBoard 
-      initialTasks={tasks || []} 
-      pillars={pillars || []} 
-      title="Mata Kuliah"
-      iconNode={<BookOpen size={32} className="text-blue-500" />}
-    />
+    <div className="space-y-8">
+      <MatkulList pillars={pillars || []} />
+      
+      <div className="pt-8 border-t border-gray-200 dark:border-gray-800">
+        <KanbanBoard 
+          initialTasks={tasks || []} 
+          pillars={pillars || []} 
+          title="Tugas Mata Kuliah"
+          iconNode={<BookOpen size={32} className="text-blue-500" />}
+        />
+      </div>
+    </div>
   )
 }

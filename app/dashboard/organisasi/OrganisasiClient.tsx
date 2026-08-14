@@ -8,10 +8,10 @@ import { id } from 'date-fns/locale'
 
 export default function OrganisasiClient({ initialTasks, pillars }: { initialTasks: any[], pillars: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<string | null>(null)
+  const [selectedTask, setSelectedTask] = useState<any | null>(null)
 
-  const handleOpenTask = (taskTitle: string) => {
-    setSelectedTask(taskTitle)
+  const handleOpenTask = (task: any) => {
+    setSelectedTask(task)
     setIsModalOpen(true)
   }
 
@@ -58,7 +58,7 @@ export default function OrganisasiClient({ initialTasks, pillars }: { initialTas
             todoTasks.map(task => (
               <div 
                 key={task.id}
-                onClick={() => handleOpenTask(task.title)}
+                onClick={() => handleOpenTask(task)}
                 className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:border-[#FF9F43] transition-colors group"
               >
                 <div className="flex items-start justify-between mb-2">
@@ -97,7 +97,7 @@ export default function OrganisasiClient({ initialTasks, pillars }: { initialTas
           
           {doingTasks.length > 0 ? (
             doingTasks.map(task => (
-              <div key={task.id} className="bg-white p-4 rounded-2xl shadow-sm border border-[#FBBF24] cursor-pointer group" onClick={() => handleOpenTask(task.title)}>
+              <div key={task.id} className="bg-white p-4 rounded-2xl shadow-sm border border-[#FBBF24] cursor-pointer group" onClick={() => handleOpenTask(task)}>
                 <p className="font-medium text-slate-800 text-sm leading-relaxed mb-4">
                   {task.title}
                 </p>
@@ -136,9 +136,9 @@ export default function OrganisasiClient({ initialTasks, pillars }: { initialTas
         </div>
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && selectedTask && (
         <TaskDetailModal 
-          taskTitle={selectedTask || ''} 
+          task={selectedTask} 
           onClose={() => setIsModalOpen(false)} 
         />
       )}

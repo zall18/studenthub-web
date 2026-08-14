@@ -15,6 +15,9 @@ export interface Database {
           user_id: string
           name: string
           type: 'MATKUL' | 'ORGANISASI' | 'PROYEK'
+          semester: number | null
+          sks: number | null
+          jadwal: Json | null
           created_at: string
         }
         Insert: {
@@ -22,6 +25,9 @@ export interface Database {
           user_id: string
           name: string
           type: 'MATKUL' | 'ORGANISASI' | 'PROYEK'
+          semester?: number | null
+          sks?: number | null
+          jadwal?: Json | null
           created_at?: string
         }
         Update: {
@@ -29,6 +35,9 @@ export interface Database {
           user_id?: string
           name?: string
           type?: 'MATKUL' | 'ORGANISASI' | 'PROYEK'
+          semester?: number | null
+          sks?: number | null
+          jadwal?: Json | null
           created_at?: string
         }
       }
@@ -37,6 +46,8 @@ export interface Database {
           id: string
           pillar_id: string | null
           title: string
+          description: string | null
+          category: string | null
           status: 'TO_DO' | 'DOING' | 'DONE'
           due_date: string | null
           is_ai_generated: boolean
@@ -46,6 +57,8 @@ export interface Database {
           id?: string
           pillar_id?: string | null
           title: string
+          description?: string | null
+          category?: string | null
           status?: 'TO_DO' | 'DOING' | 'DONE'
           due_date?: string | null
           is_ai_generated?: boolean
@@ -55,6 +68,8 @@ export interface Database {
           id?: string
           pillar_id?: string | null
           title?: string
+          description?: string | null
+          category?: string | null
           status?: 'TO_DO' | 'DOING' | 'DONE'
           due_date?: string | null
           is_ai_generated?: boolean

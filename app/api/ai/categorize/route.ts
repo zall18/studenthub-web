@@ -29,7 +29,10 @@ export async function POST(req: Request) {
       Output HANYA dalam bentuk JSON dengan format berikut:
       {
         "type": "MATKUL" | "ORGANISASI" | "PROYEK",
-        "title": "Judul tugas yang disarikan dari input (singkat & jelas)"
+        "title": "Judul tugas yang disarikan dari input (singkat & jelas)",
+        "description": "Deskripsi tugas yang disarikan dari input (bila ada, jika tidak isi null)",
+        "category": "Kategori tugas (misal: 'Tugas', 'Kuis', 'UTS', 'UAS', 'Rapat', dll. Berikan yang paling relevan atau null)",
+        "due_date": "Tanggal deadline (format ISO 8601 YYYY-MM-DDTHH:mm:ssZ, bila ada di input, jika tidak isi null)"
       }
     `
 
@@ -74,6 +77,9 @@ export async function POST(req: Request) {
         user_id: user.id,
         pillar_id: pillarId,
         title: parsedData.title,
+        description: parsedData.description || null,
+        category: parsedData.category || null,
+        due_date: parsedData.due_date || null,
         status: 'TO_DO',
         is_ai_generated: true
       } as any)
