@@ -44,9 +44,9 @@ export async function addProject(formData: FormData) {
     .insert({
       user_id: user.id,
       name,
-      type: 'PROYEK',
-      metadata
-    })
+      type: 'PROYEK' as const,
+      metadata: metadata as any
+    } as any)
 
   if (error) {
     console.error('Error adding project:', error)

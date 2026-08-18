@@ -31,9 +31,9 @@ export async function addOrganization(formData: FormData) {
     .insert({
       user_id: user.id,
       name,
-      type: 'ORGANISASI',
-      metadata
-    })
+      type: 'ORGANISASI' as const,
+      metadata: metadata as any
+    } as any)
 
   if (error) {
     console.error('Error adding organization:', error)
