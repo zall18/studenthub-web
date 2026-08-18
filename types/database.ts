@@ -18,6 +18,7 @@ export interface Database {
           semester: number | null
           sks: number | null
           jadwal: Json | null
+          metadata: Json | null
           created_at: string
         }
         Insert: {
@@ -28,6 +29,7 @@ export interface Database {
           semester?: number | null
           sks?: number | null
           jadwal?: Json | null
+          metadata?: Json | null
           created_at?: string
         }
         Update: {
@@ -38,6 +40,7 @@ export interface Database {
           semester?: number | null
           sks?: number | null
           jadwal?: Json | null
+          metadata?: Json | null
           created_at?: string
         }
       }

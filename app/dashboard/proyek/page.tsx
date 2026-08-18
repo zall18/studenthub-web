@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import KanbanBoard from '@/components/KanbanBoard'
-import { FolderKanban } from 'lucide-react'
+import ProyekList from '@/components/ProyekList'
+import { FolderKanban, LayoutDashboard } from 'lucide-react'
 
 export default async function ProyekPage() {
   const supabase = await createClient()
@@ -23,11 +24,17 @@ export default async function ProyekPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <KanbanBoard 
-      initialTasks={tasks || []} 
-      pillars={pillars || []} 
-      title="Proyek"
-      iconNode={<FolderKanban size={32} className="text-purple-500" />}
-    />
+    <div className="h-full flex flex-col gap-8">
+      <ProyekList projects={pillars || []} />
+      
+      <div className="border-t border-slate-200 pt-8 flex-1">
+        <KanbanBoard 
+          initialTasks={tasks || []} 
+          pillars={pillars || []} 
+          title="Tugas Proyek"
+          iconNode={<LayoutDashboard size={32} className="text-purple-500" />}
+        />
+      </div>
+    </div>
   )
 }

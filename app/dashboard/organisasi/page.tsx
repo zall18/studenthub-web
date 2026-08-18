@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import KanbanBoard from '@/components/KanbanBoard'
-import { Users } from 'lucide-react'
+import OrganisasiList from '@/components/OrganisasiList'
+import { Users, LayoutDashboard } from 'lucide-react'
 
 export default async function OrganisasiPage() {
   const supabase = await createClient()
@@ -23,11 +24,17 @@ export default async function OrganisasiPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <KanbanBoard 
-      initialTasks={tasks || []} 
-      pillars={pillars || []} 
-      title="Organisasi"
-      iconNode={<Users size={32} className="text-[#FF9F43]" />}
-    />
+    <div className="h-full flex flex-col gap-8">
+      <OrganisasiList organizations={pillars || []} />
+      
+      <div className="border-t border-slate-200 pt-8 flex-1">
+        <KanbanBoard 
+          initialTasks={tasks || []} 
+          pillars={pillars || []} 
+          title="Tugas Organisasi"
+          iconNode={<LayoutDashboard size={32} className="text-[#FF9F43]" />}
+        />
+      </div>
+    </div>
   )
 }
