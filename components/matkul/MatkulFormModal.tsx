@@ -102,14 +102,14 @@ export default function MatkulFormModal({ isOpen, onClose, onSaved, matkul }: Ma
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-800">
             {matkul ? 'Edit Mata Kuliah' : 'Mata Kuliah Baru'}
           </h2>
           <button 
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+            className="text-gray-500 hover:text-gray-700:text-gray-200 transition-colors"
           >
             <X size={20} />
           </button>
@@ -117,7 +117,7 @@ export default function MatkulFormModal({ isOpen, onClose, onSaved, matkul }: Ma
         
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Nama Mata Kuliah *
             </label>
             <input
@@ -125,14 +125,14 @@ export default function MatkulFormModal({ isOpen, onClose, onSaved, matkul }: Ma
               required
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all dark:text-white"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               placeholder="Contoh: Pemrograman Web"
             />
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Semester
               </label>
               <input
@@ -141,12 +141,12 @@ export default function MatkulFormModal({ isOpen, onClose, onSaved, matkul }: Ma
                 max="14"
                 value={semester}
                 onChange={e => setSemester(e.target.value ? Number(e.target.value) : '')}
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all dark:text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 placeholder="Misal: 5"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 SKS
               </label>
               <input
@@ -155,7 +155,7 @@ export default function MatkulFormModal({ isOpen, onClose, onSaved, matkul }: Ma
                 max="10"
                 value={sks}
                 onChange={e => setSks(e.target.value ? Number(e.target.value) : '')}
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all dark:text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 placeholder="Misal: 3"
               />
             </div>
@@ -163,31 +163,31 @@ export default function MatkulFormModal({ isOpen, onClose, onSaved, matkul }: Ma
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-gray-700">
                 Jadwal
               </label>
               <button 
                 type="button" 
                 onClick={handleAddJadwal}
-                className="text-xs flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                className="text-xs flex items-center text-blue-600 hover:text-blue-700 font-medium"
               >
                 <Plus size={14} className="mr-1" /> Tambah Jadwal
               </button>
             </div>
             
             {jadwal.length === 0 ? (
-              <div className="text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-dashed border-gray-200 dark:border-gray-600">
+              <div className="text-sm text-gray-500 italic bg-gray-50 p-3 rounded-lg border border-dashed border-gray-200">
                 Belum ada jadwal yang ditambahkan.
               </div>
             ) : (
               <div className="space-y-3">
                 {jadwal.map((j, i) => (
-                  <div key={i} className="flex gap-2 items-start bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <div key={i} className="flex gap-2 items-start bg-gray-50 p-3 rounded-lg border border-gray-100">
                     <div className="grid grid-cols-2 gap-2 flex-1">
                       <select
                         value={j.day}
                         onChange={e => handleUpdateJadwal(i, 'day', e.target.value)}
-                        className="px-2 py-1.5 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-blue-500 outline-none dark:text-white"
+                        className="px-2 py-1.5 text-sm bg-white border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
                       >
                         {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map(d => (
                           <option key={d} value={d}>{d}</option>
@@ -198,25 +198,25 @@ export default function MatkulFormModal({ isOpen, onClose, onSaved, matkul }: Ma
                         placeholder="Ruang"
                         value={j.room}
                         onChange={e => handleUpdateJadwal(i, 'room', e.target.value)}
-                        className="px-2 py-1.5 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-blue-500 outline-none dark:text-white"
+                        className="px-2 py-1.5 text-sm bg-white border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
                       />
                       <input
                         type="time"
                         value={j.start}
                         onChange={e => handleUpdateJadwal(i, 'start', e.target.value)}
-                        className="px-2 py-1.5 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-blue-500 outline-none dark:text-white"
+                        className="px-2 py-1.5 text-sm bg-white border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
                       />
                       <input
                         type="time"
                         value={j.end}
                         onChange={e => handleUpdateJadwal(i, 'end', e.target.value)}
-                        className="px-2 py-1.5 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-blue-500 outline-none dark:text-white"
+                        className="px-2 py-1.5 text-sm bg-white border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
                       />
                     </div>
                     <button 
                       type="button"
                       onClick={() => handleRemoveJadwal(i)}
-                      className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded-md transition-colors mt-0.5"
+                      className="text-red-500 hover:bg-red-50:bg-red-900/30 p-1.5 rounded-md transition-colors mt-0.5"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -227,11 +227,11 @@ export default function MatkulFormModal({ isOpen, onClose, onSaved, matkul }: Ma
           </div>
         </form>
         
-        <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-end gap-3">
+        <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 font-medium text-gray-700 bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50:bg-gray-600 transition-colors"
           >
             Batal
           </button>
