@@ -25,6 +25,7 @@ export default function TaskDetailModal({
   const [description, setDescription] = useState(task.description || '')
   const [category, setCategory] = useState(task.category || '')
   const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.substring(0, 16) : '')
+  const [tags, setTags] = useState<string[]>(task.tags || [])
 
   const handleAIBreaker = async () => {
     setLoadingAI(true)
@@ -86,6 +87,17 @@ export default function TaskDetailModal({
               />
             </div>
           </div>
+
+          {/* AI Tags Display */}
+          {tags && tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              {tags.map((tag, i) => (
+                <span key={i} className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold border border-amber-200">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
           
           <div className="mb-8">
             <div className="flex items-center gap-2 text-slate-700 font-bold mb-2">

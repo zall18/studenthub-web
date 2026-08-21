@@ -44,7 +44,7 @@ export default function QuickBrainDump() {
         setInput('')
         // Tampilkan modal edit
         if (data.data.task) {
-          setCreatedTask(data.data.task)
+          setCreatedTask({ ...data.data.task, tags: data.data.tags })
         } else {
           router.refresh()
         }

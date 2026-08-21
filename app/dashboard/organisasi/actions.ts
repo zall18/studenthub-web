@@ -28,6 +28,7 @@ export async function addOrganization(formData: FormData) {
 
   const { error } = await supabase
     .from('pillars')
+    // @ts-ignore
     .insert({
       user_id: user.id,
       name,

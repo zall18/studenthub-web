@@ -47,6 +47,7 @@ export async function POST(req: Request) {
         "title": "Judul tugas yang disarikan dari input (singkat & jelas, atau null jika butuh klarifikasi)",
         "description": "Deskripsi tugas yang disarikan dari input (bila ada, jika tidak isi null)",
         "category": "Kategori tugas (misal: 'Tugas', 'Kuis', 'UTS', 'UAS', 'Rapat', dll. Berikan yang paling relevan atau null)",
+        "tags": ["tag1", "tag2"] (Array of string, maksimal 3 kata kunci penting dari input pengguna, jika tidak ada kembalikan array kosong []),
         "due_date": "Tanggal deadline (format ISO 8601 YYYY-MM-DDTHH:mm:ssZ, pastikan tahun, bulan, tanggal disesuaikan dengan Konteks Waktu Saat Ini. Bila ada di input, jika tidak isi null)"
       }
     `

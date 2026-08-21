@@ -12,8 +12,11 @@ import {
   LogOut 
 } from 'lucide-react'
 
+import { useFocusMode } from './FocusModeProvider'
+
 export default function Sidebar({ userEmail, userName }: { userEmail?: string, userName?: string }) {
   const pathname = usePathname()
+  const { isFocusMode } = useFocusMode()
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -33,6 +36,8 @@ export default function Sidebar({ userEmail, userName }: { userEmail?: string, u
     }
     return pathname?.startsWith(path)
   }
+
+  if (isFocusMode) return null;
 
   return (
     <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 h-screen sticky top-0 py-6 px-4">

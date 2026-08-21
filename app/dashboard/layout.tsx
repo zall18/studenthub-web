@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import QuickBrainDump from '@/components/QuickBrainDump'
 import Sidebar from '@/components/Sidebar'
+import { FocusModeProvider } from '@/components/FocusModeProvider'
 
 export default async function DashboardLayout({
   children,
@@ -21,7 +22,8 @@ export default async function DashboardLayout({
   const userEmail = user.email
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex relative">
+    <FocusModeProvider>
+      <div className="min-h-screen bg-[#f8fafc] flex relative">
       {/* Desktop Sidebar */}
       <Sidebar userName={userName} userEmail={userEmail} />
 
@@ -74,5 +76,6 @@ export default async function DashboardLayout({
         </div>
       </div>
     </div>
+    </FocusModeProvider>
   )
 }

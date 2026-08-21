@@ -41,6 +41,7 @@ export async function addProject(formData: FormData) {
 
   const { error } = await supabase
     .from('pillars')
+    // @ts-ignore
     .insert({
       user_id: user.id,
       name,
