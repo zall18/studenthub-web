@@ -69,6 +69,15 @@ export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: 
     } else if (newStatus === 'DONE') {
       try {
         const result = await addXP(25) // 25 XP for completing a task
+        
+        // Small confetti for task completion
+        confetti({
+          particleCount: 40,
+          spread: 40,
+          origin: { y: 0.8 },
+          colors: ['#FF9F43', '#10B981']
+        })
+
         toast.success(`+25 XP! Tugas diselesaikan!`, {
           icon: '✨',
           style: {
@@ -80,16 +89,19 @@ export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: 
         })
 
         if (result.levelUp) {
-          confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#FF9F43', '#10B981', '#FBBF24']
-          })
-          toast.success(`Selamat! Kamu Naik ke Level ${result.newLevel}! 🎉`, {
-            duration: 5000,
-            icon: '🛡️'
-          })
+          // Big confetti for level up
+          setTimeout(() => {
+            confetti({
+              particleCount: 150,
+              spread: 70,
+              origin: { y: 0.6 },
+              colors: ['#FF9F43', '#10B981', '#FBBF24', '#3B82F6', '#EC4899']
+            })
+            toast.success(`Selamat! Kamu Naik ke Level ${result.newLevel}! 🎉`, {
+              duration: 5000,
+              icon: '🛡️'
+            })
+          }, 1000)
         }
       } catch (err) {
         console.error('Failed to add XP', err)
@@ -123,7 +135,20 @@ export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: 
               : 'Belum ada data pilar yang terdaftar'}
           </p>
         </div>
-        <button className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2 transition-colors">
+        <button 
+          onClick={() => {
+            handleOpenTask({
+              id: '',
+              title: '',
+              status: 'TO_DO',
+              due_date: null,
+              is_ai_generated: false,
+              pillars: pillars[0] ? { name: pillars[0].name } : null,
+              // @ts-ignore
+              pillar_id: pillars[0]?.id || null
+            })
+          }}
+          className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2 transition-colors">
           <Plus size={18} />
           Tambah Tugas
         </button>

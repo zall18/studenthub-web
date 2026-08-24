@@ -20,19 +20,77 @@ export default async function PencapaianPage() {
   const userXp = (profile as any)?.xp || 0
   const userLevel = (profile as any)?.level || 1
 
+  const { count: completedTasksCount } = await supabase
+    .from('tasks')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('status', 'DONE')
+    
+  const tasksDone = completedTasksCount || 0
+
   // Mock Badges for now (Later can be fetched from DB)
   const badges = [
-    { id: 1, name: 'First Blood', description: 'Menyelesaikan tugas pertamamu', icon: Zap, unlocked: true, color: 'text-yellow-500', bg: 'bg-yellow-100' },
-    { id: 2, name: 'Task Master', description: 'Menyelesaikan 10 tugas', icon: Target, unlocked: userLevel >= 2, color: 'text-blue-500', bg: 'bg-blue-100' },
-    { id: 3, name: 'Night Owl', description: 'Mengerjakan tugas di atas jam 12 malam', icon: Star, unlocked: false, color: 'text-purple-500', bg: 'bg-purple-100' },
-    { id: 4, name: 'Consistent', description: 'Login 7 hari berturut-turut', icon: Shield, unlocked: false, color: 'text-emerald-500', bg: 'bg-emerald-100' },
-    { id: 5, name: 'Legendary', description: 'Mencapai Level 10', icon: Crown, unlocked: userLevel >= 10, color: 'text-rose-500', bg: 'bg-rose-100' },
+    { 
+      id: 1, 
+      name: 'First Blood', 
+      description: 'Menyelesaikan tugas pertamamu', 
+      icon: Zap, 
+      unlocked: tasksDone >= 1, 
+      color: 'text-yellow-500', 
+      bg: 'bg-yellow-100',
+      progress: Math.min(tasksDone, 1),
+      max: 1
+    },
+    { 
+      id: 2, 
+      name: 'Task Master', 
+      description: 'Menyelesaikan 10 tugas', 
+      icon: Target, 
+      unlocked: tasksDone >= 10, 
+      color: 'text-blue-500', 
+      bg: 'bg-blue-100',
+      progress: Math.min(tasksDone, 10),
+      max: 10
+    },
+    { 
+      id: 3, 
+      name: 'Night Owl', 
+      description: 'Mengerjakan 5 tugas di malam hari', 
+      icon: Star, 
+      unlocked: false, 
+      color: 'text-purple-500', 
+      bg: 'bg-purple-100',
+      progress: 0, // Mocked for now
+      max: 5
+    },
+    { 
+      id: 4, 
+      name: 'Consistent', 
+      description: 'Login 7 hari berturut-turut', 
+      icon: Shield, 
+      unlocked: false, 
+      color: 'text-emerald-500', 
+      bg: 'bg-emerald-100',
+      progress: 2, // Mocked for now
+      max: 7
+    },
+    { 
+      id: 5, 
+      name: 'Legendary', 
+      description: 'Mencapai Level 10', 
+      icon: Crown, 
+      unlocked: userLevel >= 10, 
+      color: 'text-rose-500', 
+      bg: 'bg-rose-100',
+      progress: Math.min(userLevel, 10),
+      max: 10
+    },
   ]
 
   const unlockedCount = badges.filter(b => b.unlocked).length
 
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 mb-12">
       <h1 className="text-3xl font-heading font-extrabold text-slate-800 flex items-center gap-3 mb-8">
         <Trophy className="text-amber-500" size={32} />
         Pencapaian & Hadiah
@@ -42,7 +100,7 @@ export default async function PencapaianPage() {
       <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl p-8 text-white shadow-lg mb-12 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-          <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center border-4 border-white/30 backdrop-blur-md shadow-inner">
+          <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center border-4 border-white/30 backdrop-blur-md shadow-inner shrink-0">
             <span className="text-5xl font-black font-heading shadow-sm">{userLevel}</span>
           </div>
           <div className="flex-1 text-center md:text-left">
@@ -72,23 +130,38 @@ export default async function PencapaianPage() {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {badges.map(badge => {
           const Icon = badge.icon
+          const percent = Math.round((badge.progress / badge.max) * 100)
+          
           return (
             <div 
               key={badge.id}
               className={`p-6 rounded-2xl border transition-all duration-300 flex flex-col items-center text-center ${
                 badge.unlocked 
                   ? 'bg-white border-slate-200 hover:shadow-lg hover:border-amber-300' 
-                  : 'bg-slate-50 border-slate-100 opacity-60 grayscale'
+                  : 'bg-slate-50 border-slate-100 opacity-80'
               }`}
             >
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-sm ${badge.unlocked ? badge.bg : 'bg-slate-200'}`}>
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-sm ${badge.unlocked ? badge.bg : 'bg-slate-200 grayscale'}`}>
                 <Icon size={32} className={badge.unlocked ? badge.color : 'text-slate-400'} />
               </div>
-              <h4 className="font-bold text-slate-800 mb-1">{badge.name}</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">{badge.description}</p>
+              <h4 className={`font-bold mb-1 ${badge.unlocked ? 'text-slate-800' : 'text-slate-500'}`}>{badge.name}</h4>
+              <p className="text-xs text-slate-500 leading-relaxed mb-4 h-8">{badge.description}</p>
+              
+              <div className="w-full mt-auto">
+                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 mb-1">
+                  <span>Progress</span>
+                  <span>{badge.progress} / {badge.max}</span>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                  <div 
+                    className={`h-1.5 rounded-full ${badge.unlocked ? 'bg-[#10B981]' : 'bg-slate-300'}`} 
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+              </div>
               
               {!badge.unlocked && (
                 <div className="mt-4 text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1">

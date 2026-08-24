@@ -174,18 +174,26 @@ export default function TaskDetailModal({
             onClick={async () => {
               // TODO: add real save logic, we need supabase instance here
               // For now, we assume it's passed or just onClose
+              const { createClient } = await import('@/lib/supabase/client')
+              const supabase = createClient()
+              
+              const updatePayload = {
+                title,
+                description,
+                category,
+                due_date: dueDate ? new Date(dueDate).toISOString() : null
+              }
+
               if (task.id) {
-                const { createClient } = await import('@/lib/supabase/client')
-                const supabase = createClient()
-                
-                const updatePayload = {
-                  title,
-                  description,
-                  category,
-                  due_date: dueDate ? new Date(dueDate).toISOString() : null
-                }
-                
                 await (supabase.from('tasks') as any).update(updatePayload).eq('id', task.id)
+              } else {
+                const { data: { user } } = await supabase.auth.getUser()
+                await (supabase.from('tasks') as any).insert({
+                  ...updatePayload,
+                  user_id: user?.id,
+                  pillar_id: task.pillar_id,
+                  status: 'TO_DO'
+                })
               }
               onClose()
             }} 
