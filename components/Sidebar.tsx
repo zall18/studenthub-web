@@ -9,17 +9,30 @@ import {
   FolderKanban, 
   Settings, 
   UserCircle,
-  LogOut 
+  LogOut,
+  Trophy
 } from 'lucide-react'
 
 import { useFocusMode } from './FocusModeProvider'
+import { Shield } from 'lucide-react'
 
-export default function Sidebar({ userEmail, userName }: { userEmail?: string, userName?: string }) {
+export default function Sidebar({ 
+  userEmail, 
+  userName,
+  userXp = 0,
+  userLevel = 1
+}: { 
+  userEmail?: string, 
+  userName?: string,
+  userXp?: number,
+  userLevel?: number
+}) {
   const pathname = usePathname()
   const { isFocusMode } = useFocusMode()
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Pencapaian', href: '/dashboard/pencapaian', icon: Trophy },
     { name: 'Matkul', href: '/dashboard/matkul', icon: BookOpen },
     { name: 'Organisasi', href: '/dashboard/organisasi', icon: Users },
     { name: 'Proyek', href: '/dashboard/proyek', icon: FolderKanban },
@@ -94,16 +107,45 @@ export default function Sidebar({ userEmail, userName }: { userEmail?: string, u
           })}
         </div>
         
-        <div className="px-3 flex items-center justify-between">
-          <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-bold text-slate-800 truncate">{userName || 'User'}</span>
-            <span className="text-xs text-slate-400 truncate">{userEmail}</span>
+        <div className="px-3">
+          {/* User Info */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-sm font-bold text-slate-800 truncate">{userName || 'User'}</span>
+              <span className="text-xs text-slate-400 truncate">{userEmail}</span>
+            </div>
+            <form action="/auth/signout" method="post">
+              <button className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Log Out">
+                <LogOut size={18} />
+              </button>
+            </form>
           </div>
-          <form action="/auth/signout" method="post">
-            <button className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Log Out">
-              <LogOut size={18} />
-            </button>
-          </form>
+          
+          {/* Gamification Stats */}
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 relative overflow-hidden group">
+            {/* Level Badge */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-amber-500">
+                <Shield size={16} className="fill-amber-100" />
+                <span className="text-xs font-bold font-heading">Level {userLevel}</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400">{userXp} XP</span>
+            </div>
+            
+            {/* XP Bar */}
+            <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+              <div 
+                className="bg-amber-400 h-1.5 rounded-full transition-all duration-1000 ease-out relative"
+                style={{ width: `${Math.min((userXp % 100) / 100 * 100, 100)}%` }}
+              >
+                {/* Shimmer effect */}
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-shimmer" />
+              </div>
+            </div>
+            <p className="text-[9px] text-center text-slate-400 mt-2 font-medium">
+              {100 - (userXp % 100)} XP lagi untuk Level {userLevel + 1}
+            </p>
+          </div>
         </div>
       </div>
     </aside>

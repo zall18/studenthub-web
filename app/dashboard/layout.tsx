@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import QuickBrainDump from '@/components/QuickBrainDump'
 import Sidebar from '@/components/Sidebar'
 import { FocusModeProvider } from '@/components/FocusModeProvider'
+import { Toaster } from 'react-hot-toast'
 
 export default async function DashboardLayout({
   children,
@@ -21,11 +22,22 @@ export default async function DashboardLayout({
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0]
   const userEmail = user.email
 
+  // Fetch gamification profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('xp, level')
+    .eq('id', user.id)
+    .single()
+
+  const userXp = (profile as any)?.xp || 0
+  const userLevel = (profile as any)?.level || 1
+
   return (
     <FocusModeProvider>
+      <Toaster position="top-center" />
       <div className="min-h-screen bg-[#f8fafc] flex relative">
       {/* Desktop Sidebar */}
-      <Sidebar userName={userName} userEmail={userEmail} />
+      <Sidebar userName={userName} userEmail={userEmail} userXp={userXp} userLevel={userLevel} />
 
       {/* Main Content wrapper */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto pb-24 lg:pb-0">

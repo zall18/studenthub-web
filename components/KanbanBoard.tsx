@@ -6,6 +6,9 @@ import TaskDetailModal from '@/components/TaskDetailModal'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { createClient } from '@/lib/supabase/client'
+import { addXP } from '@/app/actions/gamification'
+import toast from 'react-hot-toast'
+import confetti from 'canvas-confetti'
 
 export interface Task {
   id: string
@@ -63,6 +66,34 @@ export default function KanbanBoard({ initialTasks, pillars, title, iconNode }: 
       console.error('Error updating task status:', error)
       // Revert if error
       setTasks(initialTasks) 
+    } else if (newStatus === 'DONE') {
+      try {
+        const result = await addXP(25) // 25 XP for completing a task
+        toast.success(`+25 XP! Tugas diselesaikan!`, {
+          icon: '✨',
+          style: {
+            borderRadius: '100px',
+            background: '#fffbeb',
+            color: '#b45309',
+            fontWeight: 'bold'
+          },
+        })
+
+        if (result.levelUp) {
+          confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#FF9F43', '#10B981', '#FBBF24']
+          })
+          toast.success(`Selamat! Kamu Naik ke Level ${result.newLevel}! 🎉`, {
+            duration: 5000,
+            icon: '🛡️'
+          })
+        }
+      } catch (err) {
+        console.error('Failed to add XP', err)
+      }
     }
   }
 
