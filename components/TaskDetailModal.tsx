@@ -14,7 +14,7 @@ export default function TaskDetailModal({
 }) {
   const [loadingAI, setLoadingAI] = useState(false)
   const [subtasks, setSubtasks] = useState<any[]>(
-    task.subtasks || [
+    (task.subtasks && task.subtasks.length > 0) ? task.subtasks : [
       { id: '1', title: 'Pahami materi yang ada', done: false },
       { id: '2', title: 'Buat draft penyelesaian', done: false },
       { id: '3', title: 'Review dan kumpulkan', done: false }
