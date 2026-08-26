@@ -13,12 +13,14 @@ export default function TaskDetailModal({
   onClose: () => void 
 }) {
   const [loadingAI, setLoadingAI] = useState(false)
-  const [subtasks, setSubtasks] = useState([
-    { id: '1', title: 'Pahami materi yang ada', done: true },
-    { id: '2', title: 'Buat draft penyelesaian', done: false },
-    { id: '3', title: 'Review dan kumpulkan', done: false }
-  ])
-  const [showAIResult, setShowAIResult] = useState(false)
+  const [subtasks, setSubtasks] = useState<any[]>(
+    task.subtasks || [
+      { id: '1', title: 'Pahami materi yang ada', done: false },
+      { id: '2', title: 'Buat draft penyelesaian', done: false },
+      { id: '3', title: 'Review dan kumpulkan', done: false }
+    ]
+  )
+  const [showAIResult, setShowAIResult] = useState(!!(task.subtasks && task.subtasks.length > 0))
   
   // State for editable fields
   const [title, setTitle] = useState(task.title || '')
@@ -181,7 +183,8 @@ export default function TaskDetailModal({
                 title,
                 description,
                 category,
-                due_date: dueDate ? new Date(dueDate).toISOString() : null
+                due_date: dueDate ? new Date(dueDate).toISOString() : null,
+                subtasks: showAIResult ? subtasks : null
               }
 
               if (task.id) {

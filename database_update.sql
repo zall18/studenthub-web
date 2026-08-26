@@ -60,6 +60,7 @@ ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 -- Create policies for RLS
 -- Profiles policies
 CREATE POLICY "Users can view their own profile." ON public.profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can insert their own profile." ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users can update their own profile." ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Badges policies (All authenticated users can see available badges)
@@ -76,3 +77,6 @@ CREATE POLICY "Users can delete their own transactions." ON public.transactions 
 
 -- Optional: Add tags to tasks if not using JSON (Though AI tags are mostly for view)
 -- ALTER TABLE public.tasks ADD COLUMN tags text[] default '{}';
+
+-- 4. SUBTASKS FOR TASK BREAKER
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS subtasks JSONB DEFAULT '[]'::jsonb;
