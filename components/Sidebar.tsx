@@ -14,8 +14,8 @@ import {
   Trophy,
   Gift,
   Timer,
-  Play,
-  Shield
+  Shield,
+  Zap
 } from 'lucide-react'
 
 import { useFocusMode } from './FocusModeProvider'
@@ -96,16 +96,16 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 h-screen sticky top-0 py-6 px-4">
+      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 h-screen sticky top-0 py-5 px-4 overflow-hidden">
         {/* Logo */}
-        <div className="mb-6 px-2">
+        <div className="mb-4 px-2">
           <Link href="/dashboard" className="font-heading font-extrabold text-2xl tracking-tight text-[#FF9F43]">
             StudentHub<span className="text-[#10B981]"> AI</span>
           </Link>
         </div>
 
         {/* Familiar Widget with Click to Change */}
-        <div className="px-1 mb-4">
+        <div className="px-1 mb-3">
           <FamiliarWidget 
             petType={currentPet} 
             petState={petState} 
@@ -114,21 +114,21 @@ export default function Sidebar({
         </div>
 
         {/* Quick Pomodoro Launcher Button in Sidebar */}
-        <div className="px-1 mb-6">
+        <div className="px-1 mb-4">
           <button
             onClick={handleStartSidebarPomodoro}
-            className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white p-3 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-between group text-left"
+            className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white p-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between group text-left"
           >
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
-                <Timer size={18} className="text-white animate-pulse" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
+                <Timer size={16} className="text-white animate-pulse" />
               </div>
               <div>
                 <p className="text-xs font-black tracking-wide leading-tight">Mulai Pomodoro</p>
-                <p className="text-[10px] text-indigo-200 font-medium">25 Menit Fokus</p>
+                <p className="text-[9px] text-indigo-200 font-medium">25m Fokus</p>
               </div>
             </div>
-            <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
+            <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-sm">
               +50 XP
             </span>
           </button>
@@ -136,7 +136,7 @@ export default function Sidebar({
 
         {/* Main Nav */}
         <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
-          <p className="px-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Pilar Utama</p>
+          <p className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pilar Utama</p>
           {navItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
@@ -157,9 +157,9 @@ export default function Sidebar({
           })}
         </nav>
 
-        {/* Bottom Nav (Settings, Profile, Logout) */}
-        <div className="pt-4 border-t border-slate-100 mt-2">
-          <div className="space-y-1 mb-4">
+        {/* Bottom Nav (Settings, Profile, User Info) */}
+        <div className="pt-3 border-t border-slate-100 mt-2">
+          <div className="space-y-1 mb-3">
              {bottomItems.map((item) => {
               const Icon = item.icon
               const active = isActive(item.href)
@@ -167,64 +167,40 @@ export default function Sidebar({
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 font-medium text-sm ${
+                  className={`flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-200 font-medium text-sm ${
                     active 
                       ? 'bg-slate-100 text-slate-800' 
                       : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                   }`}
                 >
-                  <Icon size={18} className={active ? 'text-slate-800' : 'text-slate-400'} />
+                  <Icon size={16} className={active ? 'text-slate-800' : 'text-slate-400'} />
                   {item.name}
                 </Link>
               )
             })}
           </div>
           
-          <div className="px-2">
-            {/* User Info */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex flex-col overflow-hidden">
-                <span className="text-xs font-bold text-slate-800 truncate">{userName || 'User'}</span>
-                <span className="text-[10px] text-slate-400 truncate">{userEmail}</span>
+          {/* Compact User Info & XP Badge */}
+          <div className="px-2 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
+            <div className="flex flex-col min-w-0 pr-2">
+              <span className="text-xs font-bold text-slate-800 truncate">{userName || 'User'}</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[10px] font-extrabold text-amber-600 bg-amber-100/70 px-1.5 py-0.2 rounded-md">
+                  Lv.{userLevel}
+                </span>
+                <span className="text-[10px] font-bold text-slate-500">
+                  {userXp} XP
+                </span>
               </div>
-              <form action="/auth/signout" method="post">
-                <button className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Log Out">
-                  <LogOut size={16} />
-                </button>
-              </form>
             </div>
-            
-            {/* Gamification Stats */}
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-2.5 relative overflow-hidden group">
-              {/* Level Badge */}
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-1 text-amber-500">
-                  <Shield size={14} className="fill-amber-100" />
-                  <span className="text-[11px] font-bold font-heading">Level {userLevel}</span>
-                </div>
-                <span className="text-[10px] font-bold text-slate-400">{userXp} XP</span>
-              </div>
-              
-              {/* XP Bar */}
-              <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                <div 
-                  className="bg-amber-400 h-1.5 rounded-full transition-all duration-1000 ease-out relative"
-                  style={{ width: `${Math.min((userXp % 100) / 100 * 100, 100)}%` }}
-                >
-                  {/* Shimmer effect */}
-                  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-shimmer" />
-                </div>
-              </div>
-
-              {/* Focus Minutes */}
-              {focusMinutes > 0 && (
-                <div className="mt-1.5 pt-1.5 border-t border-slate-100">
-                  <p className="text-[9px] text-center text-indigo-500 font-bold">
-                    🍅 {focusMinutes} menit fokus total
-                  </p>
-                </div>
-              )}
-            </div>
+            <form action="/auth/signout" method="post">
+              <button 
+                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" 
+                title="Log Out"
+              >
+                <LogOut size={16} />
+              </button>
+            </form>
           </div>
         </div>
       </aside>
