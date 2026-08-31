@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Sparkles, Edit3 } from 'lucide-react'
 import type { PetType, PetState } from '@/types/database'
 
 const PET_EMOJIS: Record<PetType, Record<PetState | 'default', string>> = {
@@ -70,13 +71,15 @@ interface FamiliarWidgetProps {
   petState: PetState
   petName?: string
   compact?: boolean
+  onClick?: () => void
 }
 
 export default function FamiliarWidget({ 
   petType = 'cat', 
   petState = 'happy',
   petName,
-  compact = false 
+  compact = false,
+  onClick
 }: FamiliarWidgetProps) {
   const [showTooltip, setShowTooltip] = useState(false)
   
@@ -93,6 +96,7 @@ export default function FamiliarWidget({
         animate={animation}
         onHoverStart={() => setShowTooltip(true)}
         onHoverEnd={() => setShowTooltip(false)}
+        onClick={onClick}
       >
         <div className="text-2xl cursor-pointer select-none">
           {emoji}
@@ -115,7 +119,8 @@ export default function FamiliarWidget({
 
   return (
     <div 
-      className={`bg-gradient-to-br ${bg} rounded-2xl p-4 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all hover:shadow-md`}
+      onClick={onClick}
+      className={`bg-gradient-to-br ${bg} rounded-2xl p-4 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all hover:shadow-md hover:border-amber-200`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
@@ -181,15 +186,27 @@ export default function FamiliarWidget({
       <div className="flex items-center gap-3 relative z-10">
         {/* Pet Avatar */}
         <motion.div
-          className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 text-2xl select-none"
+          className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 text-2xl select-none relative group-hover:scale-105 transition-transform"
           animate={animation}
         >
           {emoji}
+          {onClick && (
+            <div className="absolute -bottom-1 -right-1 bg-amber-400 text-white p-0.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+              <Edit3 size={10} />
+            </div>
+          )}
         </motion.div>
 
         {/* Pet Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-slate-700 truncate">{displayName}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-bold text-slate-700 truncate">{displayName}</p>
+            {onClick && (
+              <span className="text-[9px] font-bold text-amber-600 bg-amber-100/80 px-1.5 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                Ganti
+              </span>
+            )}
+          </div>
           <p className="text-[10px] text-slate-500 font-medium truncate">
             {stateMsg}
           </p>
