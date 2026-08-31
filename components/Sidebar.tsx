@@ -10,22 +10,31 @@ import {
   Settings, 
   UserCircle,
   LogOut,
-  Trophy
+  Trophy,
+  Gift
 } from 'lucide-react'
 
 import { useFocusMode } from './FocusModeProvider'
 import { Shield } from 'lucide-react'
+import FamiliarWidget from './familiar/FamiliarWidget'
+import type { PetType, PetState } from '@/types/database'
 
 export default function Sidebar({ 
   userEmail, 
   userName,
   userXp = 0,
-  userLevel = 1
+  userLevel = 1,
+  petType = 'cat' as PetType,
+  petState = 'happy' as PetState,
+  focusMinutes = 0,
 }: { 
   userEmail?: string, 
   userName?: string,
   userXp?: number,
-  userLevel?: number
+  userLevel?: number,
+  petType?: PetType,
+  petState?: PetState,
+  focusMinutes?: number,
 }) {
   const pathname = usePathname()
   const { isFocusMode } = useFocusMode()
@@ -33,6 +42,7 @@ export default function Sidebar({
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Pencapaian', href: '/dashboard/pencapaian', icon: Trophy },
+    { name: 'Rewards', href: '/dashboard/rewards', icon: Gift },
     { name: 'Matkul', href: '/dashboard/matkul', icon: BookOpen },
     { name: 'Organisasi', href: '/dashboard/organisasi', icon: Users },
     { name: 'Proyek', href: '/dashboard/proyek', icon: FolderKanban },
@@ -55,15 +65,20 @@ export default function Sidebar({
   return (
     <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 h-screen sticky top-0 py-6 px-4">
       {/* Logo */}
-      <div className="mb-10 px-2">
+      <div className="mb-8 px-2">
         <Link href="/dashboard" className="font-heading font-extrabold text-2xl tracking-tight text-[#FF9F43]">
           StudentHub<span className="text-[#10B981]"> AI</span>
         </Link>
       </div>
 
+      {/* Familiar Widget */}
+      <div className="px-1 mb-6">
+        <FamiliarWidget petType={petType} petState={petState} />
+      </div>
+
       {/* Main Nav */}
-      <nav className="flex-1 space-y-2">
-        <p className="px-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Pilar Utama</p>
+      <nav className="flex-1 space-y-1.5">
+        <p className="px-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Pilar Utama</p>
         {navItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
@@ -86,7 +101,7 @@ export default function Sidebar({
 
       {/* Bottom Nav (Settings, Profile, Logout) */}
       <div className="pt-6 border-t border-slate-100">
-        <div className="space-y-2 mb-6">
+        <div className="space-y-1.5 mb-6">
            {bottomItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
@@ -145,6 +160,15 @@ export default function Sidebar({
             <p className="text-[9px] text-center text-slate-400 mt-2 font-medium">
               {100 - (userXp % 100)} XP lagi untuk Level {userLevel + 1}
             </p>
+
+            {/* Focus Minutes */}
+            {focusMinutes > 0 && (
+              <div className="mt-2 pt-2 border-t border-slate-100">
+                <p className="text-[9px] text-center text-indigo-400 font-bold">
+                  🍅 {focusMinutes} menit fokus total
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import QuickBrainDump from '@/components/QuickBrainDump'
 import Sidebar from '@/components/Sidebar'
 import { FocusModeProvider } from '@/components/FocusModeProvider'
+import WeeklyWrapped from '@/components/WeeklyWrapped'
 import { Toaster } from 'react-hot-toast'
 
 export default async function DashboardLayout({
@@ -22,22 +23,33 @@ export default async function DashboardLayout({
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0]
   const userEmail = user.email
 
-  // Fetch gamification profile
+  // Fetch gamification profile (including new v2.0 fields)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('xp, level')
+    .select('xp, level, pet_type, pet_state, focus_minutes')
     .eq('id', user.id)
     .single()
 
   const userXp = (profile as any)?.xp || 0
   const userLevel = (profile as any)?.level || 1
+  const petType = (profile as any)?.pet_type || 'cat'
+  const petState = (profile as any)?.pet_state || 'happy'
+  const focusMinutes = (profile as any)?.focus_minutes || 0
 
   return (
-    <FocusModeProvider>
+    <FocusModeProvider petType={petType}>
       <Toaster position="top-center" />
       <div className="min-h-screen bg-[#f8fafc] flex relative">
       {/* Desktop Sidebar */}
-      <Sidebar userName={userName} userEmail={userEmail} userXp={userXp} userLevel={userLevel} />
+      <Sidebar 
+        userName={userName} 
+        userEmail={userEmail} 
+        userXp={userXp} 
+        userLevel={userLevel}
+        petType={petType}
+        petState={petState}
+        focusMinutes={focusMinutes}
+      />
 
       {/* Main Content wrapper */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto pb-24 lg:pb-0">
@@ -88,6 +100,9 @@ export default async function DashboardLayout({
         </div>
       </div>
     </div>
+
+    {/* Weekly Wrapped (Client-side triggered) */}
+    <WeeklyWrapped />
     </FocusModeProvider>
   )
 }

@@ -6,9 +6,44 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type PetType = 'cat' | 'dog' | 'rabbit' | 'fox' | 'bird'
+export type PetState = 'happy' | 'tired' | 'focus' | 'celebrating' | 'sleeping'
+
 export interface Database {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string
+          full_name: string | null
+          xp: number
+          level: number
+          pet_type: PetType
+          pet_state: PetState
+          focus_minutes: number
+          created_at: string
+        }
+        Insert: {
+          id: string
+          full_name?: string | null
+          xp?: number
+          level?: number
+          pet_type?: PetType
+          pet_state?: PetState
+          focus_minutes?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          full_name?: string | null
+          xp?: number
+          level?: number
+          pet_type?: PetType
+          pet_state?: PetState
+          focus_minutes?: number
+          created_at?: string
+        }
+      }
       pillars: {
         Row: {
           id: string
@@ -55,6 +90,7 @@ export interface Database {
           due_date: string | null
           is_ai_generated: boolean
           created_at: string
+          updated_at: string | null
         }
         Insert: {
           id?: string
@@ -66,6 +102,7 @@ export interface Database {
           due_date?: string | null
           is_ai_generated?: boolean
           created_at?: string
+          updated_at?: string | null
         }
         Update: {
           id?: string
@@ -77,6 +114,7 @@ export interface Database {
           due_date?: string | null
           is_ai_generated?: boolean
           created_at?: string
+          updated_at?: string | null
         }
       }
       subtasks: {
@@ -120,6 +158,64 @@ export interface Database {
           title?: string
           start_time?: string
           end_time?: string
+        }
+      }
+      custom_rewards: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          cost: number
+          is_redeemed: boolean
+          redeemed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          cost: number
+          is_redeemed?: boolean
+          redeemed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          cost?: number
+          is_redeemed?: boolean
+          redeemed_at?: string | null
+          created_at?: string
+        }
+      }
+      pomodoro_logs: {
+        Row: {
+          id: string
+          user_id: string
+          task_id: string | null
+          duration: number
+          completed: boolean
+          xp_earned: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          task_id?: string | null
+          duration: number
+          completed?: boolean
+          xp_earned?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          task_id?: string | null
+          duration?: number
+          completed?: boolean
+          xp_earned?: number
+          created_at?: string
         }
       }
     }

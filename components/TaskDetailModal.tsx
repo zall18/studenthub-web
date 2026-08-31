@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Wand2, Calendar, Save, Trash2, CheckSquare, Square, Tag, AlignLeft } from 'lucide-react'
+import { X, Wand2, Calendar, Save, Trash2, CheckSquare, Square, Tag, AlignLeft, Timer, MessageSquare } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
+import { useFocusMode } from './FocusModeProvider'
+import AICommunicationDrafter from './AICommunicationDrafter'
 
 export default function TaskDetailModal({ 
   task, 
@@ -28,6 +30,12 @@ export default function TaskDetailModal({
   const [category, setCategory] = useState(task.category || '')
   const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.substring(0, 16) : '')
   const [tags, setTags] = useState<string[]>(task.tags || [])
+  
+  // AI Drafter state
+  const [showDrafter, setShowDrafter] = useState(false)
+
+  // Pomodoro
+  const { startPomodoro } = useFocusMode()
 
   const handleAIBreaker = async () => {
     setLoadingAI(true)
@@ -39,6 +47,13 @@ export default function TaskDetailModal({
 
   const toggleSubtask = (subtaskId: string) => {
     setSubtasks(subtasks.map(s => s.id === subtaskId ? { ...s, done: !s.done } : s))
+  }
+
+  const handleStartPomodoro = () => {
+    if (task.id && title) {
+      startPomodoro({ id: task.id, title })
+      onClose()
+    }
   }
 
   const progress = Math.round((subtasks.filter(s => s.done).length / subtasks.length) * 100) || 0
@@ -114,6 +129,26 @@ export default function TaskDetailModal({
             />
           </div>
 
+          {/* AI Communication Drafter */}
+          <div className="mb-8">
+            {!showDrafter ? (
+              <button
+                onClick={() => setShowDrafter(true)}
+                className="flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-4 py-2.5 rounded-xl transition-all border border-indigo-100"
+              >
+                <MessageSquare size={16} />
+                ✉️ Draft Pesan ke Dosen / Birokrasi
+              </button>
+            ) : (
+              <AICommunicationDrafter
+                taskTitle={title}
+                taskDescription={description}
+                isOpen={showDrafter}
+                onClose={() => setShowDrafter(false)}
+              />
+            )}
+          </div>
+
           <div className="space-y-6">
             {!showAIResult ? (
               <div className="bg-gradient-to-br from-[#FBBF24]/10 to-[#FF9F43]/10 border border-[#FBBF24]/30 rounded-2xl p-6 text-center">
@@ -169,9 +204,19 @@ export default function TaskDetailModal({
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50">
-          <button className="text-slate-400 hover:text-red-500 flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-bold">
-            <Trash2 size={16} /> Hapus
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="text-slate-400 hover:text-red-500 flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-bold">
+              <Trash2 size={16} /> Hapus
+            </button>
+            {task.id && (
+              <button 
+                onClick={handleStartPomodoro}
+                className="text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-bold border border-indigo-100"
+              >
+                <Timer size={16} /> 🍅 Pomodoro
+              </button>
+            )}
+          </div>
           <button 
             onClick={async () => {
               // TODO: add real save logic, we need supabase instance here

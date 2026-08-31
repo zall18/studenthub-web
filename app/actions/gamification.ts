@@ -50,3 +50,49 @@ export async function addXP(amount: number) {
 
   return { newXp, newLevel, levelUp }
 }
+
+export async function deductXP(amount: number) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  // Fetch current profile
+  const { data: profile, error: fetchError } = await supabase
+    .from('profiles')
+    .select('xp, level')
+    .eq('id', user.id)
+    .single()
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    throw new Error('Failed to fetch profile')
+  }
+
+  const currentXp = (profile as any)?.xp || 0
+
+  if (currentXp < amount) {
+    throw new Error('Insufficient XP')
+  }
+
+  const newXp = currentXp - amount
+  const newLevel = Math.floor(newXp / 100) + 1
+
+  const { error: upsertError } = await (supabase
+    .from('profiles') as any)
+    .update({
+      xp: newXp,
+      level: newLevel,
+    })
+    .eq('id', user.id)
+
+  if (upsertError) {
+    console.error('Error deducting XP:', upsertError)
+    throw new Error('Failed to deduct XP')
+  }
+
+  revalidatePath('/dashboard')
+
+  return { newXp, newLevel }
+}
