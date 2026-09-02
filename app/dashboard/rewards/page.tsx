@@ -1,38 +1,31 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect } from 'react'
 import { Gift, Plus, ShoppingBag, Trash2, Sparkles, History, X } from 'lucide-react'
 import { createReward, redeemReward, deleteReward, getRewards } from '@/app/actions/rewards'
+import { createClient } from '@/lib/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import confetti from 'canvas-confetti'
 
 export default function RewardsPage() {
-  // This is a client component that fetches data on mount
-  return <RewardsContent />
-}
-
-function RewardsContent() {
   const [rewards, setRewards] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newCost, setNewCost] = useState('')
-  const [isPending, startTransition] = useTransition()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [userXp, setUserXp] = useState(0)
   const [showHistory, setShowHistory] = useState(false)
 
-  useEffect(() => {
-    loadRewards()
-    loadUserXp()
-  }, [])
+  const supabase = createClient()
 
   const loadRewards = async () => {
     try {
       const data = await getRewards()
-      setRewards(data)
+      setRewards(data || [])
     } catch (e) {
-      console.error(e)
+      console.error('Failed to load rewards:', e)
     } finally {
       setLoading(false)
     }
@@ -40,8 +33,6 @@ function RewardsContent() {
 
   const loadUserXp = async () => {
     try {
-      const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data: profile } = await supabase
@@ -52,90 +43,100 @@ function RewardsContent() {
         setUserXp((profile as any)?.xp || 0)
       }
     } catch (e) {
-      console.error(e)
+      console.error('Failed to load user XP:', e)
     }
   }
 
-  const handleAddReward = () => {
+  useEffect(() => {
+    loadRewards()
+    loadUserXp()
+  }, [])
+
+  const handleAddReward = async () => {
     if (!newTitle.trim() || !newCost || parseInt(newCost) <= 0) {
-      toast.error('Isi judul dan harga XP yang valid!')
+      toast.error('Isi nama reward dan harga XP yang valid!')
       return
     }
-    startTransition(async () => {
-      try {
-        await createReward(newTitle.trim(), parseInt(newCost))
-        setNewTitle('')
-        setNewCost('')
-        setShowAddForm(false)
-        toast.success('Reward baru ditambahkan! 🎁')
-        await loadRewards()
-      } catch (e: any) {
-        toast.error(e.message || 'Gagal menambahkan reward')
-      }
-    })
+
+    setIsSubmitting(true)
+    try {
+      await createReward(newTitle.trim(), parseInt(newCost))
+      setNewTitle('')
+      setNewCost('')
+      setShowAddForm(false)
+      toast.success('Reward baru berhasil ditambahkan! 🎁')
+      await loadRewards()
+    } catch (e: any) {
+      toast.error(e.message || 'Gagal menambahkan reward')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const handleRedeem = (rewardId: string, cost: number) => {
+  const handleRedeem = async (rewardId: string, cost: number) => {
     if (userXp < cost) {
-      toast.error(`XP tidak cukup! Butuh ${cost} XP, kamu punya ${userXp} XP`)
+      toast.error(`XP tidak cukup! Butuh ${cost} XP, saldo kamu ${userXp} XP`)
       return
     }
-    startTransition(async () => {
-      try {
-        const result = await redeemReward(rewardId)
-        
-        // Mega Confetti!
+
+    setIsSubmitting(true)
+    try {
+      const result = await redeemReward(rewardId)
+      
+      // Mega Confetti celebration
+      confetti({
+        particleCount: 150,
+        spread: 90,
+        origin: { y: 0.5 },
+        colors: ['#FF9F43', '#10B981', '#FBBF24', '#3B82F6', '#EC4899', '#8B5CF6']
+      })
+      setTimeout(() => {
         confetti({
-          particleCount: 200,
-          spread: 100,
-          origin: { y: 0.5 },
-          colors: ['#FF9F43', '#10B981', '#FBBF24', '#3B82F6', '#EC4899', '#8B5CF6']
+          particleCount: 80,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ['#FF9F43', '#10B981', '#FBBF24']
         })
-        setTimeout(() => {
-          confetti({
-            particleCount: 100,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 },
-            colors: ['#FF9F43', '#10B981', '#FBBF24']
-          })
-          confetti({
-            particleCount: 100,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 },
-            colors: ['#3B82F6', '#EC4899', '#8B5CF6']
-          })
-        }, 400)
-
-        toast.success(`🎉 Reward "${result.rewardTitle}" berhasil ditukar!`, {
-          duration: 5000,
-          style: {
-            borderRadius: '100px',
-            background: '#f0fdf4',
-            color: '#166534',
-            fontWeight: 'bold'
-          }
+        confetti({
+          particleCount: 80,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ['#3B82F6', '#EC4899', '#8B5CF6']
         })
+      }, 300)
 
-        setUserXp(result.newXp)
-        await loadRewards()
-      } catch (e: any) {
-        toast.error(e.message || 'Gagal menukar reward')
-      }
-    })
+      toast.success(`🎉 Reward "${result.rewardTitle}" berhasil ditukar!`, {
+        duration: 5000,
+        style: {
+          borderRadius: '100px',
+          background: '#f0fdf4',
+          color: '#166534',
+          fontWeight: 'bold'
+        }
+      })
+
+      setUserXp(result.newXp)
+      await loadRewards()
+    } catch (e: any) {
+      toast.error(e.message || 'Gagal menukar reward')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const handleDelete = (rewardId: string) => {
-    startTransition(async () => {
-      try {
-        await deleteReward(rewardId)
-        toast.success('Reward dihapus')
-        await loadRewards()
-      } catch (e: any) {
-        toast.error(e.message || 'Gagal menghapus reward')
-      }
-    })
+  const handleDelete = async (rewardId: string) => {
+    setIsSubmitting(true)
+    try {
+      await deleteReward(rewardId)
+      toast.success('Reward dihapus')
+      await loadRewards()
+    } catch (e: any) {
+      toast.error(e.message || 'Gagal menghapus reward')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const availableRewards = rewards.filter((r: any) => !r.is_redeemed)
@@ -151,13 +152,15 @@ function RewardsContent() {
         </h1>
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => setShowHistory(!showHistory)}
             className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-full text-sm hover:bg-slate-200 transition-colors"
           >
             <History size={16} />
-            Riwayat
+            {showHistory ? 'Katalog' : 'Riwayat'}
           </button>
           <button
+            type="button"
             onClick={() => setShowAddForm(true)}
             className="flex items-center gap-2 px-4 py-2 bg-[#FF9F43] text-white font-bold rounded-full text-sm hover:bg-[#ff8f24] transition-colors shadow-md"
           >
@@ -167,9 +170,9 @@ function RewardsContent() {
         </div>
       </div>
 
-      {/* XP Balance */}
+      {/* XP Balance Card */}
       <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-3xl p-6 mb-8 relative overflow-hidden shadow-lg">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <div className="relative z-10 flex items-center justify-between">
           <div>
             <p className="text-amber-100 text-sm font-medium mb-1">Saldo XP Kamu</p>
@@ -198,7 +201,11 @@ function RewardsContent() {
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-heading font-bold text-slate-800">Buat Reward Baru 🎁</h2>
-                <button onClick={() => setShowAddForm(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full">
+                <button 
+                  type="button" 
+                  onClick={() => setShowAddForm(false)} 
+                  className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"
+                >
                   <X size={20} />
                 </button>
               </div>
@@ -211,7 +218,7 @@ function RewardsContent() {
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     placeholder='Misal: "Jajan es krim akhir pekan"'
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none text-sm"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none text-sm"
                   />
                 </div>
                 <div>
@@ -222,24 +229,26 @@ function RewardsContent() {
                     onChange={(e) => setNewCost(e.target.value)}
                     placeholder="Misal: 500"
                     min="1"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none text-sm"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none text-sm"
                   />
                 </div>
               </div>
 
               <div className="flex gap-3">
                 <button 
+                  type="button"
                   onClick={() => setShowAddForm(false)}
                   className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm"
                 >
                   Batal
                 </button>
                 <button 
+                  type="button"
                   onClick={handleAddReward}
-                  disabled={isPending}
+                  disabled={isSubmitting}
                   className="flex-1 py-3 bg-[#FF9F43] text-white font-bold rounded-xl hover:bg-[#ff8f24] transition-colors text-sm shadow-md disabled:opacity-60"
                 >
-                  {isPending ? 'Menyimpan...' : 'Simpan Reward'}
+                  {isSubmitting ? 'Menyimpan...' : 'Simpan Reward'}
                 </button>
               </div>
             </motion.div>
@@ -271,6 +280,7 @@ function RewardsContent() {
                     Buat reward pertamamu sebagai motivasi menyelesaikan tugas!
                   </p>
                   <button
+                    type="button"
                     onClick={() => setShowAddForm(true)}
                     className="bg-[#FF9F43] text-white px-6 py-3 rounded-full font-bold text-sm hover:bg-[#ff8f24] transition-colors shadow-md"
                   >
@@ -300,6 +310,7 @@ function RewardsContent() {
                             </div>
                           </div>
                           <button
+                            type="button"
                             onClick={() => handleDelete(reward.id)}
                             className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                           >
@@ -308,8 +319,9 @@ function RewardsContent() {
                         </div>
                         
                         <button
+                          type="button"
                           onClick={() => handleRedeem(reward.id, reward.cost)}
-                          disabled={!canAfford || isPending}
+                          disabled={!canAfford || isSubmitting}
                           className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all ${
                             canAfford 
                               ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md active:scale-95' 

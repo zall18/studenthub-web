@@ -13,69 +13,117 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { prompt, context, format, userName, userNim, userKelas } = await req.json()
+    const { 
+      prompt, 
+      context, 
+      format = 'whatsapp',
+      targetAudience = 'dosen',
+      customTarget,
+      tone = 'formal',
+      senderName,
+      senderRole,
+      senderOrgOrNim 
+    } = await req.json()
     
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
     }
 
+    // Determine target recipient context
+    let targetDescription = 'Dosen / Tenaga Pengajar / Birokrasi Akademik Kampus'
+    if (targetAudience === 'perusahaan') {
+      targetDescription = 'Perusahaan / Calon Sponsor / Mitra Bisnis / Vendor'
+    } else if (targetAudience === 'organisasi') {
+      targetDescription = 'Anggota Organisasi / Rekan Satu Tim / Panitia Acara'
+    } else if (targetAudience === 'masyarakat') {
+      targetDescription = 'Tokoh Masyarakat / Warga / Pihak Eksternal Luar Kampus'
+    } else if (targetAudience === 'klien') {
+      targetDescription = 'Klien / Pemilik Proyek / Mitra Kolaborasi'
+    } else if (targetAudience === 'custom' && customTarget) {
+      targetDescription = customTarget
+    }
+
+    // Format specific instructions
     const formatInstructions = format === 'email' 
-      ? `Format output sebagai email formal dengan:
-         - Subject line yang jelas
-         - Salam pembuka formal (Yth. / Yang Terhormat)
-         - Isi pesan yang terstruktur
-         - Salam penutup formal (Hormat saya, / Dengan hormat,)`
-      : `Format output sebagai pesan WhatsApp formal dengan:
-         - Salam pembuka singkat (Assalamualaikum / Selamat pagi/siang/sore)
-         - Identitas diri (jika diberikan)
-         - Isi pesan yang sopan dan jelas
-         - Salam penutup (Terima kasih atas perhatiannya)`
+      ? `Format output sebagai EMAIL formal dengan:
+         - Subject line yang jelas, menarik, dan profesional (misal: "Subject: [Perihal]")
+         - Salam pembuka resmi yang sesuai dengan penerima (Yth. Bapak/Ibu [Nama/Jabatan] / Yang Terhormat)
+         - Paragraf pembuka berisi identitas dan perkenalan singkat
+         - Paragraf inti yang jelas, terstruktur (gunakan bullet points jika perlu), dan to the point
+         - Paragraf penutup dengan ucapan terima kasih dan call-to-action yang sopan
+         - Salam penutup formal (Hormat kami, / Dengan hormat, / Salam hangat,)`
+      : `Format output sebagai pesan WHATSAPP terstruktur dengan:
+         - Salam pembuka yang sopan dan ramah (misal: "Selamat pagi/siang Bapak/Ibu/Rekan-rekan" atau "Assalamualaikum Wr. Wb.")
+         - Identitas singkat pengirim
+         - Poin inti pesan yang ringkas, mudah dibaca cepat di layar ponsel (bisa gunakan format bold *teks* atau emoji formal seperlunya)
+         - Penutup yang sopan dan apresiatif`
 
-    const identitySection = (userName || userNim || userKelas) 
-      ? `Identitas pengirim yang harus dimasukkan dalam pesan:
-         ${userName ? `- Nama: ${userName}` : ''}
-         ${userNim ? `- NIM: ${userNim}` : ''}
-         ${userKelas ? `- Kelas: ${userKelas}` : ''}`
-      : 'Identitas pengirim tidak diberikan, buat placeholder [Nama], [NIM], [Kelas].'
+    // Tone instructions
+    let toneInstruction = 'Gunakan bahasa Indonesia baku, sangat sopan, hormat, dan menjunjung tinggi etika akademik.'
+    if (tone === 'persuasif') {
+      toneInstruction = 'Gunakan bahasa profesional, persuasif, mengedepankan nilai tambah (value proposition), percaya diri namun tetap rendah hati dan menghargai.'
+    } else if (tone === 'hangat') {
+      toneInstruction = 'Gunakan bahasa yang hangat, memotivasi, kolaboratif, namun tetap rapi, terstruktur, dan jelas.'
+    }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    // Identity injection
+    const identityParts = []
+    if (senderName) identityParts.push(`Nama: ${senderName}`)
+    if (senderRole) identityParts.push(`Peran/Jabatan: ${senderRole}`)
+    if (senderOrgOrNim) identityParts.push(`NIM/Instansi/Organisasi: ${senderOrgOrNim}`)
+
+    const identitySection = identityParts.length > 0
+      ? `Identitas pengirim yang HARUS dimasukkan secara natural dalam pesan:\n${identityParts.map(p => `- ${p}`).join('\n')}`
+      : 'Identitas pengirim tidak spesifik, buat placeholder yang wajar seperti [Nama Pengirim], [Jabatan/NIM].'
+
     const systemPrompt = `
-      Anda adalah asisten penyusun pesan formal untuk mahasiswa Indonesia.
+      Anda adalah AI asisten komunikasi profesional serbaguna untuk mahasiswa dan pengurus organisasi.
       
-      Tugas Anda:
-      1. Menerima input informal/kasar dari mahasiswa
-      2. Mengubahnya menjadi pesan formal dengan bahasa Indonesia akademik yang SOPAN, PROFESIONAL, dan TERSTRUKTUR
-      3. Menjaga esensi dan maksud asli dari input pengguna
+      Tugas Utama:
+      1. Menerima draf/ide pesan informal atau poin-poin singkat dari pengguna
+      2. Mengubahnya menjadi pesan yang terstruktur rapi, siap kirim, dan sangat sesuai dengan target penerima serta saluran komunikasi yang dipilih
+      3. Menjaga esensi maksud asli pesan tanpa menambahkan klaim palsu yang tidak ada di input
+      
+      Target Penerima: ${targetDescription}
+      Saluran Komunikasi: ${format.toUpperCase()}
+      Gaya Bahasa (Tone): ${toneInstruction}
       
       ${formatInstructions}
       
       ${identitySection}
       
-      ${context ? `Konteks tugas terkait: "${context}"` : ''}
+      ${context ? `Konteks Tugas/Proyek Terkait:\n"${context}"` : ''}
       
-      Panduan gaya bahasa:
-      - Gunakan bahasa Indonesia baku (EYD)
-      - Hindari bahasa gaul, singkatan informal, atau emoji
-      - Gunakan kalimat yang efektif dan tidak bertele-tele
-      - Perhatikan tanda baca dan ejaan
-      - Tambahkan kalimat penghubung yang sopan
-      - Gunakan sapaan yang sesuai (Bapak/Ibu/Dr./Prof. sesuai konteks)
+      Input Pengguna (Pesan Asli):
+      "${prompt}"
       
-      Input pengguna: "${prompt}"
-      
-      Output HANYA pesan yang sudah diformat, tanpa penjelasan tambahan.
+      Aturan Output:
+      - Berikan HANYA teks pesan akhir yang siap di-copy-paste
+      - Jangan tambahkan catatan kaki atau penjelasan basa-basi di luar pesan
     `
 
-    const result = await model.generateContent(systemPrompt)
-    const draft = result.response.text()
+    let draft = ''
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      const result = await model.generateContent(systemPrompt)
+      draft = result.response.text()
+    } catch (modelErr) {
+      console.warn('Fallback to gemini-2.0-flash or gemini-2.5-flash', modelErr)
+      const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+      const result = await fallbackModel.generateContent(systemPrompt)
+      draft = result.response.text()
+    }
 
     return NextResponse.json({
       success: true,
       draft: draft.trim(),
-      format: format || 'whatsapp'
+      format,
+      targetAudience
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in AI draft message:', error)
-    return NextResponse.json({ error: 'Failed to draft message' }, { status: 500 })
+    return NextResponse.json({ 
+      error: error.message || 'Failed to draft message' 
+    }, { status: 500 })
   }
 }

@@ -133,16 +133,21 @@ export default function TaskDetailModal({
           <div className="mb-8">
             {!showDrafter ? (
               <button
+                type="button"
                 onClick={() => setShowDrafter(true)}
-                className="flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-4 py-2.5 rounded-xl transition-all border border-indigo-100"
+                className="flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-4 py-2.5 rounded-2xl transition-all border border-indigo-100 shadow-sm"
               >
                 <MessageSquare size={16} />
-                ✉️ Draft Pesan ke Dosen / Birokrasi
+                ✉️ AI Communication Drafter (Dosen, Sponsor, Tim, Mitra)
               </button>
             ) : (
               <AICommunicationDrafter
                 taskTitle={title}
                 taskDescription={description}
+                defaultAudience={
+                  task.pillars?.type === 'ORGANISASI' ? 'organisasi' :
+                  task.pillars?.type === 'PROYEK' ? 'klien' : 'dosen'
+                }
                 isOpen={showDrafter}
                 onClose={() => setShowDrafter(false)}
               />
