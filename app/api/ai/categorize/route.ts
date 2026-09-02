@@ -1,9 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+import { generateGeminiContent } from '@/lib/gemini'
 
 export async function POST(req: Request) {
   try {
@@ -29,7 +26,6 @@ export async function POST(req: Request) {
       minute: '2-digit' 
     });
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' })
     const prompt = `
       Anda adalah asisten AI produktivitas.
       Tugas Anda adalah mengkategorikan input dari pengguna ke dalam salah satu dari 3 pilar: 'MATKUL', 'ORGANISASI', atau 'PROYEK'.
@@ -52,8 +48,7 @@ export async function POST(req: Request) {
       }
     `
 
-    const result = await model.generateContent(prompt)
-    const responseText = result.response.text()
+    const responseText = await generateGeminiContent(prompt)
     
     // Clean up potential markdown formatting in response (e.g., ```json ... ```)
     const cleanedText = responseText.replace(/```json\n?|\n?```/g, '').trim()
@@ -70,34 +65,33 @@ export async function POST(req: Request) {
 
     // 1. Get or create a pillar for this type
     let pillarId = null
-    const { data: existingPillars } = await supabase
-      .from('pillars')
+    const { data: existingPillars } = await (supabase
+      .from('pillars') as any)
       .select('id')
       .eq('user_id', user.id)
       .eq('type', parsedData.type)
       .limit(1)
 
     if (existingPillars && existingPillars.length > 0) {
-      // @ts-ignore
       pillarId = existingPillars[0].id
     } else {
       // Create a default pillar if none exists for this type
-      const { data: newPillar, error: pillarError } = await supabase
-        .from('pillars')
+      const { data: newPillar } = await (supabase
+        .from('pillars') as any)
         .insert({
           user_id: user.id,
           name: `Pilar ${parsedData.type}`,
           type: parsedData.type
-        } as any)
+        })
         .select()
         .single()
         
-      if (newPillar) pillarId = (newPillar as any).id
+      if (newPillar) pillarId = newPillar.id
     }
 
     // 2. Insert the task
-    const { data: newTask, error: taskError } = await supabase
-      .from('tasks')
+    const { data: newTask, error: taskError } = await (supabase
+      .from('tasks') as any)
       .insert({
         user_id: user.id,
         pillar_id: pillarId,
@@ -107,7 +101,7 @@ export async function POST(req: Request) {
         due_date: parsedData.due_date || null,
         status: 'TO_DO',
         is_ai_generated: true
-      } as any)
+      })
       .select()
       .single()
 

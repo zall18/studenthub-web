@@ -1,8 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+import { generateGeminiContent } from '@/lib/gemini'
 
 export async function POST(req: Request) {
   try {
@@ -102,17 +100,7 @@ export async function POST(req: Request) {
       - Jangan tambahkan catatan kaki atau penjelasan basa-basi di luar pesan
     `
 
-    let draft = ''
-    try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-      const result = await model.generateContent(systemPrompt)
-      draft = result.response.text()
-    } catch (modelErr) {
-      console.warn('Fallback to gemini-2.0-flash or gemini-2.5-flash', modelErr)
-      const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-      const result = await fallbackModel.generateContent(systemPrompt)
-      draft = result.response.text()
-    }
+    const draft = await generateGeminiContent(systemPrompt)
 
     return NextResponse.json({
       success: true,

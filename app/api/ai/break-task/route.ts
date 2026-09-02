@@ -1,8 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+import { generateGeminiContent } from '@/lib/gemini'
 
 export async function POST(req: Request) {
   try {
@@ -18,7 +16,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Task ID and Title are required' }, { status: 400 })
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
     const prompt = `
       Anda adalah asisten AI produktivitas.
       Tugas Anda adalah memecah tugas besar berikut menjadi langkah-langkah kerja yang kecil (maksimal 5 langkah), spesifik, dan siap dieksekusi agar pengguna tidak kelelahan (burnout).
@@ -34,13 +31,10 @@ export async function POST(req: Request) {
       ]
     `
 
-    const result = await model.generateContent(prompt)
-    const responseText = result.response.text()
+    const responseText = await generateGeminiContent(prompt)
     
     const cleanedText = responseText.replace(/```json\n?|\n?```/g, '').trim()
     const parsedSubtasks: string[] = JSON.parse(cleanedText)
-
-    // TODO: Insert these subtasks into Supabase 'subtasks' table linking to taskId
 
     return NextResponse.json({
       success: true,

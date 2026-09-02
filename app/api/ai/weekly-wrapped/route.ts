@@ -1,8 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+import { generateGeminiContent } from '@/lib/gemini'
 
 export async function POST(req: Request) {
   try {
@@ -16,44 +14,68 @@ export async function POST(req: Request) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
     // Fetch completed tasks this week
-    const { data: completedTasks } = await supabase
-      .from('tasks')
-      .select('title, pillars(name, type)')
-      .eq('user_id', user.id)
-      .eq('status', 'DONE')
-      .gte('updated_at', sevenDaysAgo)
+    let completedTasks: any[] = []
+    try {
+      const { data } = await supabase
+        .from('tasks')
+        .select('title, pillars(name, type)')
+        .eq('user_id', user.id)
+        .eq('status', 'DONE')
+        .gte('updated_at', sevenDaysAgo)
+      completedTasks = data || []
+    } catch (e) {
+      console.warn('Could not fetch completed tasks for wrapped:', e)
+    }
 
     // Fetch pomodoro stats
-    const { data: pomodoroLogs } = await supabase
-      .from('pomodoro_logs')
-      .select('duration, xp_earned, completed')
-      .eq('user_id', user.id)
-      .gte('created_at', sevenDaysAgo)
+    let pomodoroLogs: any[] = []
+    try {
+      const { data } = await supabase
+        .from('pomodoro_logs')
+        .select('duration, xp_earned, completed')
+        .eq('user_id', user.id)
+        .gte('created_at', sevenDaysAgo)
+      pomodoroLogs = data || []
+    } catch (e) {
+      console.warn('Could not fetch pomodoro logs for wrapped:', e)
+    }
 
     // Fetch profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('xp, level, focus_minutes, pet_type')
-      .eq('id', user.id)
-      .single()
+    let profile: any = null
+    try {
+      const { data } = await (supabase
+        .from('profiles') as any)
+        .select('xp, level, focus_minutes, pet_type')
+        .eq('id', user.id)
+        .maybeSingle()
+      profile = data
+    } catch (e) {
+      console.warn('Could not fetch profile for wrapped:', e)
+    }
 
     // Fetch redeemed rewards this week
-    const { data: redeemed } = await supabase
-      .from('custom_rewards')
-      .select('title, cost')
-      .eq('user_id', user.id)
-      .eq('is_redeemed', true)
-      .gte('redeemed_at', sevenDaysAgo)
+    let redeemed: any[] = []
+    try {
+      const { data } = await (supabase
+        .from('custom_rewards') as any)
+        .select('title, cost')
+        .eq('user_id', user.id)
+        .eq('is_redeemed', true)
+        .gte('redeemed_at', sevenDaysAgo)
+      redeemed = data || []
+    } catch (e) {
+      console.warn('Could not fetch rewards for wrapped:', e)
+    }
 
     // Calculate stats
     const tasksCompleted = completedTasks?.length || 0
-    const taskTitles = (completedTasks as any[])?.map(t => t.title) || []
-    const focusSessions = (pomodoroLogs as any[])?.filter(l => l.completed).length || 0
-    const focusMinutes = (pomodoroLogs as any[])?.reduce((sum, l) => sum + (l.duration || 0), 0) || 0
-    const xpFromPomodoro = (pomodoroLogs as any[])?.reduce((sum, l) => sum + (l.xp_earned || 0), 0) || 0
+    const taskTitles = completedTasks?.map(t => t.title) || []
+    const focusSessions = pomodoroLogs?.filter(l => l.completed).length || 0
+    const focusMinutes = pomodoroLogs?.reduce((sum, l) => sum + (l.duration || 0), 0) || 0
+    const xpFromPomodoro = pomodoroLogs?.reduce((sum, l) => sum + (l.xp_earned || 0), 0) || 0
     const rewardsRedeemed = redeemed?.length || 0
-    const totalXp = (profile as any)?.xp || 0
-    const currentLevel = (profile as any)?.level || 1
+    const totalXp = profile?.xp || 0
+    const currentLevel = profile?.level || 1
 
     // If no activity, return minimal response
     if (tasksCompleted === 0 && focusSessions === 0) {
@@ -66,7 +88,6 @@ export async function POST(req: Request) {
     }
 
     // Generate AI narrative
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
     const prompt = `
       Anda adalah asisten AI motivasi untuk mahasiswa Indonesia.
       
@@ -92,8 +113,13 @@ export async function POST(req: Request) {
       Output HANYA narasi, tanpa format atau label tambahan.
     `
 
-    const result = await model.generateContent(prompt)
-    const narrative = result.response.text().trim()
+    let narrative = ''
+    try {
+      narrative = (await generateGeminiContent(prompt)).trim()
+    } catch (aiErr) {
+      console.warn('AI narrative failed, using fallback:', aiErr)
+      narrative = `Hebat! Minggu ini kamu telah menyelesaikan ${tasksCompleted} tugas dan ${focusMinutes} menit fokus. Pertahankan semangatmu! 🚀`
+    }
 
     return NextResponse.json({
       success: true,
@@ -103,7 +129,7 @@ export async function POST(req: Request) {
         tasksCompleted,
         focusMinutes,
         focusSessions,
-        xpGained: xpFromPomodoro + (tasksCompleted * 25), // 25 XP per task
+        xpGained: xpFromPomodoro + (tasksCompleted * 25),
         rewardsRedeemed,
         currentLevel
       }
