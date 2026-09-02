@@ -9,13 +9,12 @@ import {
   Users, 
   FolderKanban, 
   Settings, 
-  UserCircle,
-  LogOut,
-  Trophy,
-  Gift,
-  Timer,
-  Shield,
-  Zap
+  UserCircle, 
+  LogOut, 
+  Trophy, 
+  Gift, 
+  Timer, 
+  MessageSquare
 } from 'lucide-react'
 
 import { useFocusMode } from './FocusModeProvider'
@@ -49,6 +48,7 @@ export default function Sidebar({
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Komunikasi AI', href: '/dashboard/komunikasi', icon: MessageSquare },
     { name: 'Pencapaian', href: '/dashboard/pencapaian', icon: Trophy },
     { name: 'Rewards', href: '/dashboard/rewards', icon: Gift },
     { name: 'Matkul', href: '/dashboard/matkul', icon: BookOpen },

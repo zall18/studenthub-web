@@ -8,21 +8,24 @@ export async function createReward(title: string, cost: number) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) throw new Error('Unauthorized')
-  if (!title || cost <= 0) throw new Error('Invalid reward data')
+  if (!title || cost <= 0) throw new Error('Data reward tidak valid')
 
-  const { data, error } = await supabase
-    .from('custom_rewards')
+  const { data, error } = await (supabase
+    .from('custom_rewards') as any)
     .insert({
       user_id: user.id,
       title,
       cost,
-    } as any)
+    })
     .select()
     .single()
 
   if (error) {
     console.error('Error creating reward:', error)
-    throw new Error('Failed to create reward')
+    if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+      throw new Error('Tabel "custom_rewards" belum dibuat di Supabase. Harap jalankan script database_update_v2.sql di Supabase SQL Editor.')
+    }
+    throw new Error(error.message || 'Gagal membuat reward')
   }
 
   revalidatePath('/dashboard/rewards')
@@ -36,28 +39,28 @@ export async function redeemReward(rewardId: string) {
   if (!user) throw new Error('Unauthorized')
 
   // Fetch the reward
-  const { data: reward, error: fetchError } = await supabase
-    .from('custom_rewards')
+  const { data: reward, error: fetchError } = await (supabase
+    .from('custom_rewards') as any)
     .select('*')
     .eq('id', rewardId)
     .eq('user_id', user.id)
     .single()
 
-  if (fetchError || !reward) throw new Error('Reward not found')
-  if ((reward as any).is_redeemed) throw new Error('Reward already redeemed')
+  if (fetchError || !reward) throw new Error('Reward tidak ditemukan')
+  if (reward.is_redeemed) throw new Error('Reward sudah pernah ditukar')
 
   // Fetch user XP
-  const { data: profile } = await supabase
-    .from('profiles')
+  const { data: profile } = await (supabase
+    .from('profiles') as any)
     .select('xp, level')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
-  const currentXp = (profile as any)?.xp || 0
-  const rewardCost = (reward as any).cost
+  const currentXp = profile?.xp || 0
+  const rewardCost = reward.cost
 
   if (currentXp < rewardCost) {
-    throw new Error('Insufficient XP')
+    throw new Error(`XP tidak cukup. Saldo: ${currentXp} XP, Harga: ${rewardCost} XP`)
   }
 
   // Deduct XP
@@ -69,7 +72,7 @@ export async function redeemReward(rewardId: string) {
     .update({ xp: newXp, level: newLevel })
     .eq('id', user.id)
 
-  if (profileError) throw new Error('Failed to deduct XP')
+  if (profileError) throw new Error('Gagal memotong saldo XP')
 
   // Mark reward as redeemed
   const { error: redeemError } = await (supabase
@@ -80,11 +83,11 @@ export async function redeemReward(rewardId: string) {
     })
     .eq('id', rewardId)
 
-  if (redeemError) throw new Error('Failed to redeem reward')
+  if (redeemError) throw new Error('Gagal menandai reward sebagai sudah ditukar')
 
   revalidatePath('/dashboard/rewards')
   revalidatePath('/dashboard')
-  return { newXp, newLevel, rewardTitle: (reward as any).title }
+  return { newXp, newLevel, rewardTitle: reward.title }
 }
 
 export async function deleteReward(rewardId: string) {
@@ -93,16 +96,16 @@ export async function deleteReward(rewardId: string) {
 
   if (!user) throw new Error('Unauthorized')
 
-  const { error } = await supabase
-    .from('custom_rewards')
+  const { error } = await (supabase
+    .from('custom_rewards') as any)
     .delete()
     .eq('id', rewardId)
     .eq('user_id', user.id)
-    .eq('is_redeemed', false) // Can only delete unredeemed
+    .eq('is_redeemed', false)
 
   if (error) {
     console.error('Error deleting reward:', error)
-    throw new Error('Failed to delete reward')
+    throw new Error('Gagal menghapus reward')
   }
 
   revalidatePath('/dashboard/rewards')
@@ -112,18 +115,23 @@ export async function getRewards() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) throw new Error('Unauthorized')
+  if (!user) return []
 
-  const { data, error } = await supabase
-    .from('custom_rewards')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  try {
+    const { data, error } = await (supabase
+      .from('custom_rewards') as any)
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching rewards:', error)
-    throw new Error('Failed to fetch rewards')
+    if (error) {
+      console.warn('Error fetching rewards (table might not exist yet):', error)
+      return []
+    }
+
+    return data || []
+  } catch (err) {
+    console.warn('Error in getRewards:', err)
+    return []
   }
-
-  return data || []
 }
