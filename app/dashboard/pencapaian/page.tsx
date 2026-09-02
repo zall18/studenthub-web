@@ -11,26 +11,41 @@ export default async function PencapaianPage() {
     redirect('/')
   }
 
-  // Fetch gamification profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('xp, level, focus_minutes')
-    .eq('id', user.id)
-    .single()
+  // Fetch gamification profile safely
+  let userXp = 0
+  let userLevel = 1
+  let focusMinutes = 0
 
-  const userXp = (profile as any)?.xp || 0
-  const userLevel = (profile as any)?.level || 1
-  const focusMinutes = (profile as any)?.focus_minutes || 0
+  try {
+    const { data: profile } = await (supabase
+      .from('profiles') as any)
+      .select('xp, level, focus_minutes')
+      .eq('id', user.id)
+      .maybeSingle()
 
-  const { count: completedTasksCount } = await supabase
-    .from('tasks')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .eq('status', 'DONE')
-    
-  const tasksDone = completedTasksCount || 0
+    if (profile) {
+      userXp = profile.xp ?? 0
+      userLevel = profile.level ?? 1
+      focusMinutes = profile.focus_minutes ?? 0
+    }
+  } catch (err) {
+    console.warn('Could not load profile in pencapaian:', err)
+  }
 
-  // Fetch Pomodoro stats
+  // Fetch completed tasks count safely
+  let tasksDone = 0
+  try {
+    const { count } = await supabase
+      .from('tasks')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'DONE')
+    tasksDone = count || 0
+  } catch (e) {
+    console.warn('Could not count completed tasks:', e)
+  }
+
+  // Fetch Pomodoro stats safely
   let pomodoroStats = { totalSessions: 0, completedSessions: 0, totalMinutes: 0, totalXp: 0, focusRate: 0 }
   try {
     pomodoroStats = await getPomodoroStats()
@@ -38,14 +53,19 @@ export default async function PencapaianPage() {
     // Pomodoro table may not exist yet
   }
 
-  // Fetch redeemed rewards count
-  const { count: redeemedCount } = await supabase
-    .from('custom_rewards')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .eq('is_redeemed', true)
+  // Fetch redeemed rewards count safely
+  let rewardsRedeemed = 0
+  try {
+    const { count: redeemedCount } = await (supabase
+      .from('custom_rewards') as any)
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_redeemed', true)
 
-  const rewardsRedeemed = redeemedCount || 0
+    rewardsRedeemed = redeemedCount || 0
+  } catch (e) {
+    // custom_rewards table may not exist yet
+  }
 
   // Badges with Pomodoro and Rewards badges
   const badges = [

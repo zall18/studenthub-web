@@ -7,6 +7,7 @@ import Sidebar from '@/components/Sidebar'
 import { FocusModeProvider } from '@/components/FocusModeProvider'
 import WeeklyWrapped from '@/components/WeeklyWrapped'
 import { Toaster } from 'react-hot-toast'
+import type { PetType, PetState } from '@/types/database'
 
 export default async function DashboardLayout({
   children,
@@ -23,18 +24,30 @@ export default async function DashboardLayout({
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0]
   const userEmail = user.email
 
-  // Fetch gamification profile (including new v2.0 fields)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('xp, level, pet_type, pet_state, focus_minutes')
-    .eq('id', user.id)
-    .single()
+  // Safe fetch gamification profile with defensive fallbacks
+  let userXp = 0
+  let userLevel = 1
+  let petType: PetType = 'cat'
+  let petState: PetState = 'happy'
+  let focusMinutes = 0
 
-  const userXp = (profile as any)?.xp || 0
-  const userLevel = (profile as any)?.level || 1
-  const petType = (profile as any)?.pet_type || 'cat'
-  const petState = (profile as any)?.pet_state || 'happy'
-  const focusMinutes = (profile as any)?.focus_minutes || 0
+  try {
+    const { data: profile } = await (supabase
+      .from('profiles') as any)
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profile) {
+      userXp = profile.xp ?? 0
+      userLevel = profile.level ?? 1
+      petType = (profile.pet_type as PetType) ?? 'cat'
+      petState = (profile.pet_state as PetState) ?? 'happy'
+      focusMinutes = profile.focus_minutes ?? 0
+    }
+  } catch (err) {
+    console.warn('Could not load full profile in layout:', err)
+  }
 
   return (
     <FocusModeProvider petType={petType}>
